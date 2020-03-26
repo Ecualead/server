@@ -5,7 +5,7 @@
  * @Project: ProjectName
  * @Filename: ClusterServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-25T04:20:50-05:00
+ * @Last modified time: 2020-03-25T19:15:05-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -36,12 +36,13 @@ export class ClusterServer {
       throw new Error('Cluster server its initialized');
     }
 
+    /* Initialize the logger */
+    Logger.setLogLevel(settings.SERVICE.LOG || LOG_LEVEL.ERROR);
+
     /* Initialize the singleton class instance */
     ClusterServer._instance = new ClusterServer();
     ClusterServer._instance._settings = settings;
 
-    /* Initialize the logger */
-    Logger.setLogLevel(settings.SERVICE.LOG || LOG_LEVEL.ERROR);
     return ClusterServer._instance;
   }
 
