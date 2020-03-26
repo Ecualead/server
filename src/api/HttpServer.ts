@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: HttpServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-25T04:24:06-05:00
+ * @Last modified time: 2020-03-25T19:14:53-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -209,7 +209,7 @@ export class HttpServer {
           worker: this.worker
         };
 
-        this._logger.info('Service instance is running', [meta]);
+        this._logger.info('Service instance is running', meta);
         resolve();
       });
     });
