@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: HttpServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-25T19:14:53-05:00
+ * @Last modified time: 2020-04-03T02:17:48-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -52,7 +52,7 @@ export class HttpServer {
   }
 
   public static get shared(): HttpServer {
-    if(!HttpServer._instance){
+    if (!HttpServer._instance) {
       throw new Error('HttpServer not initialized');
     }
     return HttpServer._instance;
@@ -225,7 +225,14 @@ export class HttpServer {
     if (routes) {
       const keys = Object.keys(routes);
       keys.forEach(key => {
-        this.use(key, routes[key]);
+        /* Check if the route is an array of routers or not */
+        if (Array.isArray(routes[key])) {
+          routes[key].forEach((value: any) => {
+            this.use(key, value);
+          });
+        } else {
+          this.use(key, routes[key]);
+        }
       });
     }
   }
