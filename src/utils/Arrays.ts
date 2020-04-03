@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: Arrays.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-30T03:11:34-05:00
+ * @Last modified time: 2020-04-02T23:39:18-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -44,5 +44,67 @@ export class Arrays {
     }
 
     return array;
+  }
+
+  /**
+   * Sort the given array
+   *
+   * @param arr  Array to be sorted
+   */
+  public static sort(arr: string[]): string[] {
+    return arr.sort((n1: string, n2: string): number => {
+      if (n1 > n2) {
+        return 1;
+      }
+      if (n1 < n2) {
+        return -1;
+      }
+      return 0;
+    });
+  }
+
+  /**
+   * Binary search on the given array
+   *
+   * @param arr  Array of values
+   * @param value  Value to search into the array
+   */
+  public static search(arr: string[], value: string): number {
+    let start: number = 0, end: number = arr.length - 1;
+    let mid: number;
+    /* Iterate while start not meets end  */
+    while (start <= end) {
+      /* Find the mid index */
+      mid = Math.floor((start + end) / 2);
+
+      /* If element is present at mid */
+      if (arr[mid] === value) {
+        return mid;
+      }
+
+      /* Look in left or right half accordingly */
+      if (arr[mid] < value) {
+        start = mid + 1;
+      } else {
+        end = mid - 1;
+      }
+    }
+    /* Element not found */
+    return -1;
+  }
+
+  /**
+   * Intersect all the array items
+   *
+   * @param arr  List of arrays to intersect
+   */
+  public static intersect(...arr: string[][]): string[] {
+    /* Sort all the results */
+    for (let i = 0; i < arr.length; ++i) {
+      arr[i] = Arrays.sort(arr[i]);
+    }
+
+    /* Intersect all the sorted arrays */
+    return [...arr].reduce((a1: string[], a2: string[]): string[] => a1.filter((value: string) => Arrays.search(a2, value) > -1));
   }
 }
