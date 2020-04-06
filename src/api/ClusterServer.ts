@@ -5,14 +5,22 @@
  * @Project: ProjectName
  * @Filename: ClusterServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-25T19:15:05-05:00
+ * @Last modified time: 2020-04-05T22:49:40-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
 import cluster from 'cluster';
+import express from 'express';
 import { HttpServer } from './HttpServer';
 import { ISettings } from './ISettings';
 import { Logger, LOG_LEVEL } from './Logger';
+
+export interface IHooks {
+  preMongo?: () => Promise<void>;
+  postMongo?: () => Promise<void>;
+  preExpress?: () => Promise<void>;
+  postExpress?: (app: express.Application) => Promise<void>;
+}
 
 /**
  * Standar cluster class to initialize the service as cluster
@@ -21,6 +29,7 @@ export class ClusterServer {
   private static _instance: ClusterServer;
   private _settings: ISettings;
   private _logger: Logger;
+  private _slaveHooks: IHooks;
 
   private constructor() {
     this._logger = new Logger('ClusterServer');
@@ -31,7 +40,7 @@ export class ClusterServer {
    *
    * @param settings  Service settings
    */
-  public static setup(settings: ISettings): ClusterServer {
+  public static setup(settings: ISettings, hooks?: IHooks): ClusterServer {
     if (ClusterServer._instance) {
       throw new Error('Cluster server its initialized');
     }
@@ -42,6 +51,7 @@ export class ClusterServer {
     /* Initialize the singleton class instance */
     ClusterServer._instance = new ClusterServer();
     ClusterServer._instance._settings = settings;
+    ClusterServer._instance._slaveHooks = hooks ? hooks : {};
 
     return ClusterServer._instance;
   }
@@ -100,12 +110,112 @@ export class ClusterServer {
    * @param server  HttpServer instance
    * @param routes  Routes to initialize the application server
    */
-  private _runSlave(server: HttpServer, routes?: any) {
-    /* Initialize MongoDB */
-    server.initMongo();
-    /* Initialize Express application */
-    server.initExpress(cluster.worker, routes);
-    /* Start the slave worker HTTP server */
-    server.listen();
+  private _runSlave(server: HttpServer, routes?: any): Promise<void> {
+    return new Promise<void>((resolve) => {
+      /* Initialize MongoDB connection */
+      this._slavePreMongo().then(() => {
+        this._slaveMongo(server).then(() => {
+          this._slavePostMongo().then(() => {
+            /* Initialize Express application */
+            this._slavePreExpress().then(() => {
+              this._slaveExpress(server, routes).then(() => {
+                this._slavePostExpress(server).then(() => {
+                  /* Start the slave worker HTTP server */
+                  server.listen().then(resolve);
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+
+  /**
+   * Hook called before initialize the MongoDB connection
+   */
+  private _slavePreMongo(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      if (this._slaveHooks.preMongo) {
+        this._slaveHooks.preMongo()
+          .then(resolve).catch((err: any) => {
+            this._logger.error('Invalid pre mongoose hook', err);
+            resolve();
+          });
+        return;
+      }
+      resolve();
+    });
+  }
+
+  /**
+   * Initialize MongoDB connection
+   */
+  private _slaveMongo(server: HttpServer): Promise<void> {
+    return new Promise<void>((resolve) => {
+      /* Initialize MongoDB */
+      server.initMongo().then(resolve);
+    });
+  }
+
+  /**
+   * Hook called after initialize the MongoDB connection
+   */
+  private _slavePostMongo(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      if (this._slaveHooks.postMongo) {
+        this._slaveHooks.postMongo()
+          .then(resolve).catch((err: any) => {
+            this._logger.error('Invalid post mongoose hook', err);
+            resolve();
+          });
+        return;
+      }
+      resolve();
+    });
+  }
+
+  /**
+   * Hook called before initialize the Express server
+   */
+  private _slavePreExpress(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      if (this._slaveHooks.preExpress) {
+        this._slaveHooks.preExpress()
+          .then(resolve).catch((err: any) => {
+            this._logger.error('Invalid pre express hook', err);
+            resolve();
+          });
+        return;
+      }
+      resolve();
+    });
+  }
+
+  /**
+   * Initialize the Express server
+   */
+  private _slaveExpress(server: HttpServer, routes?: any): Promise<void> {
+    return new Promise<void>((resolve) => {
+      /* Initialize Express */
+      server.initExpress(cluster.worker, routes).then(resolve);
+    });
+  }
+
+  /**
+   * Hook called after initialize the Express server
+   */
+  private _slavePostExpress(server: HttpServer): Promise<void> {
+    return new Promise<void>((resolve) => {
+      if (this._slaveHooks.postExpress) {
+        this._slaveHooks.postExpress(server.app)
+          .then(resolve).catch((err: any) => {
+            this._logger.error('Invalid post express hook', err);
+            resolve();
+          });
+        return;
+      }
+      resolve();
+    });
   }
 }
