@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: HttpServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-04-03T02:17:48-05:00
+ * @Last modified time: 2020-04-05T22:47:55-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -65,22 +65,26 @@ export class HttpServer {
   /**
    * Initialize the MongoDB connection
    */
-  public initMongo() {
-    /* Connect to the MongoDB server */
-    mongoose.set('useCreateIndex', !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX);
-    mongoose.connect(HttpServer._settings.MONGODB.URI, {
-      useNewUrlParser: !HttpServer._settings.MONGODB.NOT_USE_NEW_URL_PARSER,
-      useCreateIndex: !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX,
-      autoIndex: !HttpServer._settings.MONGODB.NOT_AUTO_INDEX,
-      poolSize: HttpServer._settings.MONGODB.POOL_SIZE || 10,
-      useUnifiedTopology: !HttpServer._settings.MONGODB.NOT_USE_UNIFIED_TOPOLOGY,
-    }).then(() => {
-      this._logger.info('Connected to MongoDB', { worker: this.worker });
-    });
+  public initMongo(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      /* Connect to the MongoDB server */
+      mongoose.set('useCreateIndex', !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX);
+      mongoose.connect(HttpServer._settings.MONGODB.URI, {
+        useNewUrlParser: !HttpServer._settings.MONGODB.NOT_USE_NEW_URL_PARSER,
+        useCreateIndex: !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX,
+        autoIndex: !HttpServer._settings.MONGODB.NOT_AUTO_INDEX,
+        poolSize: HttpServer._settings.MONGODB.POOL_SIZE || 10,
+        useUnifiedTopology: !HttpServer._settings.MONGODB.NOT_USE_UNIFIED_TOPOLOGY,
+      }).then(() => {
+        this._logger.info('Connected to MongoDB', { worker: this.worker });
+        resolve();
+      });
 
-    /* Listen for MongoDB error connection */
-    mongoose.connection.on('error', (err: any) => {
-      this._logger.error('MongoDB cannot establish the connection', err)
+      /* Listen for MongoDB error connection */
+      mongoose.connection.on('error', (err: any) => {
+        this._logger.error('MongoDB cannot establish the connection', err)
+        reject(err);
+      });
     });
   }
 
@@ -90,90 +94,93 @@ export class HttpServer {
    * @param worker  Cluster worker instance
    * @param routes  Initial Express routes
    */
-  public initExpress(worker?: any, routes?: any) {
-    this._worker = worker;
-    this._app = express();
-    this._http = createServer(this._app);
+  public initExpress(worker?: any, routes?: any): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this._worker = worker;
+      this._app = express();
+      this._http = createServer(this._app);
 
-    /* Check to enable body parser */
-    if (!HttpServer._settings.SERVICE.NOT_BODY_PARSER) {
-      this._app.use(bodyParser.json());
-      this._app.use(bodyParser.urlencoded({ extended: true }));
-    }
+      /* Check to enable body parser */
+      if (!HttpServer._settings.SERVICE.NOT_BODY_PARSER) {
+        this._app.use(bodyParser.json());
+        this._app.use(bodyParser.urlencoded({ extended: true }));
+      }
 
-    /* Check to enable method override */
-    if (!HttpServer._settings.SERVICE.NOT_METHOD_OVERRIDE) {
-      this._app.use(methodOverride('X-HTTP-Method')) // Microsoft
-      this._app.use(methodOverride('X-HTTP-Method-Override')) // Google/GData
-      this._app.use(methodOverride('X-Method-Override')) // IBM
-    }
+      /* Check to enable method override */
+      if (!HttpServer._settings.SERVICE.NOT_METHOD_OVERRIDE) {
+        this._app.use(methodOverride('X-HTTP-Method')) // Microsoft
+        this._app.use(methodOverride('X-HTTP-Method-Override')) // Google/GData
+        this._app.use(methodOverride('X-Method-Override')) // IBM
+      }
 
-    /* Check to enable CORS */
-    if (!HttpServer._settings.SERVICE.NOT_CORS) {
-      this._app.use(cors());
-    }
+      /* Check to enable CORS */
+      if (!HttpServer._settings.SERVICE.NOT_CORS) {
+        this._app.use(cors());
+      }
 
-    /**
-     * Security mechanism
-     */
-    this._app.use(Helmet.xssFilter());
-    this._app.disable('x-powered-by');
-    this._app.use(Helmet.hidePoweredBy({ setTo: HttpServer._settings.SERVICE.NAME }));
-    this._app.use(Helmet.frameguard({ action: 'deny' }));
-    this._app.use(Helmet.noSniff());
-    this._app.use(Helmet.referrerPolicy());
-    this._app.use(Helmet.ieNoOpen());
-    this._app.use(Helmet.hsts({
-      maxAge: 5184000
-    }));
+      /**
+       * Security mechanism
+       */
+      this._app.use(Helmet.xssFilter());
+      this._app.disable('x-powered-by');
+      this._app.use(Helmet.hidePoweredBy({ setTo: HttpServer._settings.SERVICE.NAME }));
+      this._app.use(Helmet.frameguard({ action: 'deny' }));
+      this._app.use(Helmet.noSniff());
+      this._app.use(Helmet.referrerPolicy());
+      this._app.use(Helmet.ieNoOpen());
+      this._app.use(Helmet.hsts({
+        maxAge: 5184000
+      }));
 
-    /* Set trust proxy */
-    this._app.set('trust proxy', !HttpServer._settings.SERVICE.NOT_TRUST_PROXY);
+      /* Set trust proxy */
+      this._app.set('trust proxy', !HttpServer._settings.SERVICE.NOT_TRUST_PROXY);
 
-    // Express configuration
-    this._app.set("interface", HttpServer._settings.SERVICE.INTERFACE || '127.0.0.1');
-    this._app.set("port", HttpServer._settings.SERVICE.PORT);
-    this._app.set("env", HttpServer._settings.SERVICE.ENV);
+      // Express configuration
+      this._app.set("interface", HttpServer._settings.SERVICE.INTERFACE || '127.0.0.1');
+      this._app.set("port", HttpServer._settings.SERVICE.PORT);
+      this._app.set("env", HttpServer._settings.SERVICE.ENV);
 
-    /* Increment debug output on offline development platforms */
-    if (HttpServer._settings.SERVICE.ENV !== 'production') {
-      this._app.use(logger('dev'));
-      this._app.all('/*', (req: Request, res: Response, next: NextFunction) => {
-        onFinished(res, (err: any, resp: any) => {
-          let requestTrace: any = {
-            stamp: moment.utc().toDate().getTime(),
-            err: err,
-            req: {
-              method: req.method,
-              url: req.originalUrl,
-              body: req.body,
-              headers: req.headers
-            },
-            res: {
-              status: resp.statusCode,
-              message: resp.statusMessage
-            },
-            worker: this.worker
-          };
-          this._logger.debug(' Request trace', requestTrace);
+      /* Increment debug output on offline development platforms */
+      if (HttpServer._settings.SERVICE.ENV !== 'production') {
+        this._app.use(logger('dev'));
+        this._app.all('/*', (req: Request, res: Response, next: NextFunction) => {
+          onFinished(res, (err: any, resp: any) => {
+            let requestTrace: any = {
+              stamp: moment.utc().toDate().getTime(),
+              err: err,
+              req: {
+                method: req.method,
+                url: req.originalUrl,
+                body: req.body,
+                headers: req.headers
+              },
+              res: {
+                status: resp.statusCode,
+                message: resp.statusMessage
+              },
+              worker: this.worker
+            };
+            this._logger.debug(' Request trace', requestTrace);
+          });
+          next();
         });
-        next();
-      });
-    } else {
-      this._app.use(logger('tiny'));
-    }
+      } else {
+        this._app.use(logger('tiny'));
+      }
 
-    /* Check to retrieve the real IP address of the request */
-    if (!HttpServer._settings.SERVICE.NOT_REAL_IP) {
-      this._app.use((req: any, res: Response, next: NextFunction) => {
-        /* Look for request IP address */
-        res.locals['ipAddr'] = req.headers['x-caller-ip'] || req.headers['x-forwarded-for'] || req.ips[0] || req.connection.remoteAddress;
-        next();
-      });
-    }
+      /* Check to retrieve the real IP address of the request */
+      if (!HttpServer._settings.SERVICE.NOT_REAL_IP) {
+        this._app.use((req: any, res: Response, next: NextFunction) => {
+          /* Look for request IP address */
+          res.locals['ipAddr'] = req.headers['x-caller-ip'] || req.headers['x-forwarded-for'] || req.ips[0] || req.connection.remoteAddress;
+          next();
+        });
+      }
 
-    /* Register the Express routes */
-    this._registerRoutes(routes);
+      /* Register the Express routes */
+      this._registerRoutes(routes);
+      resolve();
+    });
   }
 
   /**
