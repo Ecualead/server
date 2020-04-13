@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: ISetting.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-25T04:02:45-05:00
+ * @Last modified time: 2020-04-12T23:28:24-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -28,6 +28,13 @@ export interface ISettings {
     NOT_REAL_IP?: boolean;
   };
 
+  /* Service authentication */
+  AUTH?: {
+    SERVER: string;
+    ID: string;
+    SECRET: string;
+  }
+
   /* Service version */
   VERSION: {
     MAIN: number;
@@ -44,4 +51,7 @@ export interface ISettings {
     NOT_USE_NEW_URL_PARSER?: boolean;
     NOT_USE_UNIFIED_TOPOLOGY?: boolean;
   };
+
+  /* Additional settings */
+  [key: string]: any;
 }

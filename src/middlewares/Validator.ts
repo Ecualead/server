@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: Validator.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-25T04:17:42-05:00
+ * @Last modified time: 2020-04-12T21:55:42-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -28,8 +28,8 @@
            }
          });
          next({
-           error: ERRORS.INVALID_FIELDS,
-           data: { fields: fields }
+           boError: ERRORS.INVALID_FIELDS,
+           boData: { fields: fields }
          });
          return;
        }
