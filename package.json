@@ -1,6 +1,6 @@
 {
   "name": "@ikoabo/core_srv",
-  "version": "1.0.1",
+  "version": "1.0.8",
   "description": "IKOABO Core Microservice API",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -27,10 +27,10 @@
   "author": "Reinier Millo Sánchez <reinier.millo88@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://gitlab.com/ikoabo/packages/core-srv/issues",
+    "url": "https://gitlab.com/ikoabo/packages/core-srv-ikoabo/issues",
     "email": "reinier.millo88@gmail.com"
   },
-  "homepage": "https://gitlab.com/ikoabo/packages/core-srv#readme",
+  "homepage": "https://gitlab.com/ikoabo/packages/core-srv-ikoabo#readme",
   "publishConfig": {
     "registry": "https://nxs.ikoabo.com/repository/npm-local/"
   },
