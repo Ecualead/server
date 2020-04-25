@@ -5,7 +5,7 @@
  * @Project: ProjectName
  * @Filename: ClusterServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-04-05T22:49:40-05:00
+ * @Last modified time: 2020-04-25T06:20:55-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -20,6 +20,7 @@ export interface IHooks {
   postMongo?: () => Promise<void>;
   preExpress?: () => Promise<void>;
   postExpress?: (app: express.Application) => Promise<void>;
+  running?: () => Promise<void>;
 }
 
 /**
@@ -121,7 +122,12 @@ export class ClusterServer {
               this._slaveExpress(server, routes).then(() => {
                 this._slavePostExpress(server).then(() => {
                   /* Start the slave worker HTTP server */
-                  server.listen().then(resolve);
+                  server.listen().then(() => {
+                    if (this._slaveHooks.running) {
+                      this._slaveHooks.running();
+                    }
+                    resolve();
+                  });
                 });
               });
             });
