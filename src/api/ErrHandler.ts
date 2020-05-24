@@ -9,7 +9,7 @@
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
-import { Logger } from '@/api/Logger';
+import { Logger } from './Logger';
 
 export class ErrHandler {
   private static _instance: ErrHandler;

@@ -1,14 +1,11 @@
 {
   "name": "@ikoabo/core_srv",
-  "version": "1.0.12",
+  "version": "1.0.15",
   "description": "IKOABO Core Microservice API",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "engines": {
     "npm": ">=12.16.1"
-  },
-  "_moduleAliases": {
-    "@": "dist/"
   },
   "scripts": {
     "build": "tsc",
@@ -47,7 +44,6 @@
     "@types/helmet": "0.0.45",
     "@types/method-override": "0.0.31",
     "@types/mocha": "^7.0.2",
-    "@types/module-alias": "^2.0.0",
     "@types/mongoose": "^5.7.7",
     "@types/morgan": "^1.9.0",
     "@types/on-finished": "^2.3.1",
@@ -76,7 +72,6 @@
     "express": "^4.17.1",
     "helmet": "^3.21.3",
     "method-override": "^3.0.0",
-    "module-alias": "^2.2.2",
     "moment": "^2.24.0",
     "mongoose": "^5.9.6",
     "morgan": "^1.10.0",

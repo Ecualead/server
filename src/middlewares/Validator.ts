@@ -11,7 +11,7 @@
 
 import JoiBase from '@hapi/joi';
 import { Request, Response, NextFunction } from 'express';
-import { ERRORS } from '@/types/errors';
+import { ERRORS } from '../types/errors';
 import mongoose from 'mongoose';
 
 const CustomJoi = JoiBase.extend((joi) => {

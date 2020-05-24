@@ -11,9 +11,9 @@
 
 import cluster from 'cluster';
 import express from 'express';
-import { HttpServer } from '@/api/HttpServer';
-import { ISettings } from '@/api/ISettings';
-import { Logger, LOG_LEVEL } from '@/api/Logger';
+import { HttpServer } from './HttpServer';
+import { ISettings } from './ISettings';
+import { Logger, LOG_LEVEL } from './Logger';
 
 export interface IHooks {
   preMongo?: () => Promise<void>;

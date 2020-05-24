@@ -11,20 +11,20 @@
 import "module-alias/register";
 
 /* Export api */
-export * from '@/api/ClusterServer';
-export * from '@/api/HttpServer';
-export * from '@/api/ISettings';
-export * from '@/api/Logger';
+export * from './api/ClusterServer';
+export * from './api/HttpServer';
+export * from './api/ISettings';
+export * from './api/Logger';
 
 /* Export middlewares */
-export * from '@/middlewares/ResponseHandler';
-export * from '@/middlewares/Validator';
+export * from './middlewares/ResponseHandler';
+export * from './middlewares/Validator';
 
 /* Export types */
-export * from '@/types/errors';
-export * from '@/types/status';
+export * from './types/errors';
+export * from './types/status';
 
 /* Export utils */
-export * from '@/utils/Objects';
-export * from '@/utils/Arrays';
-export * from '@/utils/Token';
+export * from './utils/Objects';
+export * from './utils/Arrays';
+export * from './utils/Token';

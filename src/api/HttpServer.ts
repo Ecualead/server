@@ -20,9 +20,9 @@ import moment from 'moment';
 import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import { Server, createServer } from 'http';
-import { Logger } from '@/api/Logger';
-import { ISettings } from '@/api/ISettings';
-import { HTTP_STATUS } from '@/types/status';
+import { Logger } from './Logger';
+import { ISettings } from './ISettings';
+import { HTTP_STATUS } from '../types/status';
 
 /**
  * Standar Express Http Server handler
