@@ -9,27 +9,9 @@
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
-import JoiBase from '@hapi/joi';
+import { Joi } from './ValidatorObjectId';
 import { Request, Response, NextFunction } from 'express';
 import { ERRORS } from '../types/errors';
-import mongoose from 'mongoose';
-
-const CustomJoi = JoiBase.extend((joi) => {
-  return {
-    type: 'objectId',
-    base: joi.string().required().min(24).max(24),
-    messages: {
-      'objectId.invalid': '"{{#label}}" isn\'t a valid ObjectId',
-    },
-    validate(value, helpers) {
-      /* Validate value against Mongoose ObjectId validator */
-      if (!mongoose.isValidObjectId(value)) {
-        return { value, errors: helpers.error('objectId.invalid') };
-      }
-    },
-  };
-});
-export const Joi = CustomJoi;
 
 export class Validators {
   /**
