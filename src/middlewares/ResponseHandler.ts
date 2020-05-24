@@ -10,9 +10,11 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { HTTP_STATUS } from '../types/status';
+import { HTTP_STATUS } from '@/types/status';
+import {Logger} from '@/api/Logger';
 
 export class ResponseHandler {
+  private static _logger: Logger = new Logger('ResponseHandler');
 
   /**
    * Send a success response
@@ -32,6 +34,7 @@ export class ResponseHandler {
     if (err.boData) {
       (<any>error)['data'] = err.boData;
     }
+    ResponseHandler._logger.error('Request error',{error: err, response: error});
     res.status(status).json(error).end();
   }
 }
