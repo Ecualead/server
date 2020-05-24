@@ -8,9 +8,19 @@
     "target": "es6",
     "noImplicitAny": true,
     "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "sourceMap": true,
     "outDir": "./lib",
     "baseUrl": ".",
+    "lib": [
+      "ES2018"
+    ],
+    "paths": {
+      "@/*":[
+        "src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts"
