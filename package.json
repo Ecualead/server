@@ -1,6 +1,6 @@
 {
   "name": "@ikoabo/core_srv",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "IKOABO Core Microservice API",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

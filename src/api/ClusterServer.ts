@@ -5,7 +5,7 @@
  * @Project: ProjectName
  * @Filename: ClusterServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-04-05T22:49:40-05:00
+ * @Last modified time: 2020-05-03T17:50:32-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -15,11 +15,16 @@ import { HttpServer } from './HttpServer';
 import { ISettings } from './ISettings';
 import { Logger, LOG_LEVEL } from './Logger';
 
-export interface IHooks {
+export interface ISlaveHooks {
   preMongo?: () => Promise<void>;
   postMongo?: () => Promise<void>;
   preExpress?: () => Promise<void>;
   postExpress?: (app: express.Application) => Promise<void>;
+  running?: () => Promise<void>;
+}
+
+export interface IMasterHooks {
+  worker?: (worker: any) => Promise<void>;
 }
 
 /**
@@ -29,7 +34,8 @@ export class ClusterServer {
   private static _instance: ClusterServer;
   private _settings: ISettings;
   private _logger: Logger;
-  private _slaveHooks: IHooks;
+  private _slaveHooks: ISlaveHooks;
+  private _masterHooks: IMasterHooks;
 
   private constructor() {
     this._logger = new Logger('ClusterServer');
@@ -40,7 +46,7 @@ export class ClusterServer {
    *
    * @param settings  Service settings
    */
-  public static setup(settings: ISettings, hooks?: IHooks): ClusterServer {
+  public static setup(settings: ISettings, slaveHooks?: ISlaveHooks, masterHooks?: IMasterHooks): ClusterServer {
     if (ClusterServer._instance) {
       throw new Error('Cluster server its initialized');
     }
@@ -51,7 +57,8 @@ export class ClusterServer {
     /* Initialize the singleton class instance */
     ClusterServer._instance = new ClusterServer();
     ClusterServer._instance._settings = settings;
-    ClusterServer._instance._slaveHooks = hooks ? hooks : {};
+    ClusterServer._instance._slaveHooks = slaveHooks ? slaveHooks : {};
+    ClusterServer._instance._masterHooks = masterHooks ? masterHooks : {};
 
     return ClusterServer._instance;
   }
@@ -94,13 +101,19 @@ export class ClusterServer {
     /* Initialize the number of required workers */
     const instances = this._settings.SERVICE.INSTANCES;
     for (let i = 0; i < instances; i++) {
-      cluster.fork();
+      const worker = cluster.fork();
+      if (this._masterHooks.worker) {
+        this._masterHooks.worker(worker);
+      }
     }
 
     /* Hanlde cluster worker restart on exit */
     cluster.on('exit', (worker, code, signal) => {
       this._logger.error('Cluster worker died', { pid: process.pid, worker: worker.id, code: code, signal: signal });
-      cluster.fork();
+      const newWorker = cluster.fork();
+      if (this._masterHooks.worker) {
+        this._masterHooks.worker(newWorker);
+      }
     });
   }
 
@@ -121,7 +134,12 @@ export class ClusterServer {
               this._slaveExpress(server, routes).then(() => {
                 this._slavePostExpress(server).then(() => {
                   /* Start the slave worker HTTP server */
-                  server.listen().then(resolve);
+                  server.listen().then(() => {
+                    if (this._slaveHooks.running) {
+                      this._slaveHooks.running();
+                    }
+                    resolve();
+                  });
                 });
               });
             });
