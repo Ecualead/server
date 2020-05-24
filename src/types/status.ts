@@ -9,6 +9,11 @@
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
+ export enum BASE_STATUS{
+   BS_DELETED = -1,
+   BS_UNKNOWN = 0,
+ }
+
  export enum HTTP_STATUS {
    HTTP_OK = 200,
    HTTP_CREATED = 201,
