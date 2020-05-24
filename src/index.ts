@@ -14,6 +14,7 @@ export * from './api/ClusterServer';
 export * from './api/HttpServer';
 export * from './api/ISettings';
 export * from './api/Logger';
+export * from './api/CRUD';
 
 /* Export middlewares */
 export * from './middlewares/ResponseHandler';
