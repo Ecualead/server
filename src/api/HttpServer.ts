@@ -20,8 +20,9 @@ import moment from 'moment';
 import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import { Server, createServer } from 'http';
-import { Logger } from './Logger';
-import { ISettings } from './ISettings';
+import { Logger } from '@/api/Logger';
+import { ISettings } from '@/api/ISettings';
+import { HTTP_STATUS } from '@/types/status';
 
 /**
  * Standar Express Http Server handler
@@ -242,5 +243,10 @@ export class HttpServer {
         }
       });
     }
+
+    /* Other routes give 404 error */
+    this._app.use(function(_req, res, _next) {
+      res.status(HTTP_STATUS.HTTP_NOT_FOUND).json({error: HTTP_STATUS.HTTP_NOT_FOUND}).end();
+    });
   }
 }
