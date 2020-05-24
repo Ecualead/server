@@ -15,7 +15,7 @@ import mongoose from 'mongoose';
 const CustomJoi = JoiBase.extend((joi) => {
   return {
     type: 'objectId',
-    base: joi.string().required().min(24).max(24),
+    base: joi.string().min(24).max(24),
     messages: {
       'objectId.invalid': '"{{#label}}" isn\'t a valid ObjectId',
     },
@@ -30,5 +30,5 @@ const CustomJoi = JoiBase.extend((joi) => {
 export const Joi = CustomJoi;
 
 export const ValidateObjectId = CustomJoi.object().keys({
-  id: CustomJoi.objectId(),
+  id: CustomJoi.objectId().required(),
 });

@@ -69,6 +69,7 @@ export class HttpServer {
   public initMongo(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       /* Connect to the MongoDB server */
+      mongoose.set('useFindAndModify', false);
       mongoose.set('useCreateIndex', !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX);
       mongoose.connect(HttpServer._settings.MONGODB.URI, {
         useNewUrlParser: !HttpServer._settings.MONGODB.NOT_USE_NEW_URL_PARSER,
