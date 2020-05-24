@@ -29,6 +29,6 @@ const CustomJoi = JoiBase.extend((joi) => {
 });
 export const Joi = CustomJoi;
 
-export const CheckId = CustomJoi.object().keys({
+export const ValidateObjectId = CustomJoi.object().keys({
   id: CustomJoi.objectId(),
 });
