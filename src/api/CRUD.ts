@@ -1,3 +1,14 @@
+/**
+ * @Author: Reinier Millo Sánchez <millo>
+ * @Date:   2020-05-27T00:22:22-05:00
+ * @Email:  reinier.millo88@gmail.com
+ * @Project: ProjectName
+ * @Filename: CRUD.ts
+ * @Last modified by:   millo
+ * @Last modified time: 2020-05-27T00:27:08-05:00
+ * @Copyright: Copyright 2020 IKOA Business Opportunity
+ */
+
 import mongoose from 'mongoose';
 import { Logger } from './Logger';
 import { ERRORS } from '../types/errors';
@@ -30,10 +41,13 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   /**
    * Update document object
    */
-  public update(id: string, data: T): Promise<D> {
+  public update(id: string, data: T, query?: any): Promise<D> {
     this._logger.debug('Updating document', { id: id, data: data });
     return new Promise<D>((resolve, reject) => {
-      const query: any = { _id: id, status: { $gt: BASE_STATUS.BS_UNKNOWN } };
+      query['_id'] = id;
+      if(!query['status']){
+        query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
+      }
       const update: any = { $set: data };
       this._model.findOneAndUpdate(query, update, { new: true })
         .then((value: D) => {
@@ -49,10 +63,13 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   /**
    * Fetch and object
    */
-  public fetch(id: string): Promise<D> {
+  public fetch(id: string, query?: any): Promise<D> {
     this._logger.debug('Fetch document', { id: id });
     return new Promise<D>((resolve, reject) => {
-      const query: any = { _id: id, status: { $gt: BASE_STATUS.BS_UNKNOWN } };
+      query['_id'] = id;
+      if(!query['status']){
+        query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
+      }
       this._model.findOne(query)
         .then((value: D) => {
           if (!value) {
@@ -67,19 +84,24 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   /**
    * Fetch all objects as stream cursor
    */
-  public fetchAll(): mongoose.QueryCursor<D> {
+  public fetchAll(query?: any): mongoose.QueryCursor<D> {
     this._logger.debug('Fetch all documents');
-    const query: any = { status: { $gt: BASE_STATUS.BS_UNKNOWN } };
+    if(!query['status']){
+      query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
+    }
     return this._model.find(query).cursor();
   }
 
   /**
    * Delete and object
    */
-  public delete(id: string): Promise<D> {
+  public delete(id: string, query?: any): Promise<D> {
     this._logger.debug('Delete document', { id: id });
     return new Promise<D>((resolve, reject) => {
-      const query: any = { _id: id, status: { $gt: BASE_STATUS.BS_UNKNOWN } };
+      query['_id'] = id;
+      if(!query['status']){
+        query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
+      }
       const update: any = { $set: { status: -1 } };
       this._model.findByIdAndUpdate(query, update, { new: true })
         .then((value: D) => {
@@ -95,9 +117,12 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   /**
  * Update an object status
  */
-  protected _updateStatus(id: string, status: BASE_STATUS): Promise<D> {
+  protected _updateStatus(id: string, status: BASE_STATUS, query?: any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
-      const query: any = { _id: id, status: { $gt: BASE_STATUS.BS_UNKNOWN } };
+      query['_id'] = id;
+      if(!query['status']){
+        query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
+      }
       const update: any = { $set: { status: status } };
       this._model.findOneAndUpdate(query, update, { new: true })
         .then((value: D) => {
