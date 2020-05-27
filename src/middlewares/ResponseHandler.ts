@@ -9,13 +9,25 @@
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
+export enum HTTP_STATUS {
+  HTTP_OK = 200,
+  HTTP_CREATED = 201,
+  HTTP_PARTIAL_CONTENT = 206,
+  HTTP_BAD_REQUEST = 400,
+  HTTP_UNAUTHORIZED = 401,
+  HTTP_FORBIDDEN = 403,
+  HTTP_NOT_FOUND = 404,
+  HTTP_NOT_ACCEPTABLE = 406,
+  HTTP_CONFLICT = 409,
+  HTTP_INTERNAL_SERVER_ERROR = 500,
+}
+
 import { Request, Response, NextFunction } from 'express';
-import { HTTP_STATUS } from '../types/status';
-import {Logger} from '../api/Logger';
+import { ErrHandler } from '../api/ErrHandler';
+
+const ErrCtrl = ErrHandler.shared;
 
 export class ResponseHandler {
-  private static _logger: Logger = new Logger('ResponseHandler');
-
   /**
    * Send a success response
    */
@@ -28,13 +40,6 @@ export class ResponseHandler {
    */
   public static error(err: any, _req: Request, res: Response, _next: NextFunction) {
     const status = err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_BAD_REQUEST;
-    let error = {
-      error: err.boError ? err.boError : HTTP_STATUS.HTTP_INTERNAL_SERVER_ERROR,
-    }
-    if (err.boData) {
-      (<any>error)['data'] = err.boData;
-    }
-    ResponseHandler._logger.error('Request error',{error: err.stack, response: error});
-    res.status(status).json(error).end();
+    res.status(status).json(ErrCtrl.parseError(err)).end();
   }
 }

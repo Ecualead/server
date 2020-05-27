@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
 import { Logger } from './Logger';
 import { ERRORS } from '../types/errors';
-import { BASE_STATUS } from '../types/status';
+
+export enum BASE_STATUS{
+  BS_DELETED = -1,
+  BS_UNKNOWN = 0,
+  BS_DISABLED = 1,
+  BS_ENABLED = 2,
+}
 
 export abstract class CRUD<T, D extends mongoose.Document>{
   protected _model: mongoose.Model<D>;
@@ -76,6 +82,24 @@ export abstract class CRUD<T, D extends mongoose.Document>{
       const query: any = { _id: id, status: { $gt: BASE_STATUS.BS_UNKNOWN } };
       const update: any = { $set: { status: -1 } };
       this._model.findByIdAndUpdate(query, update, { new: true })
+        .then((value: D) => {
+          if (!value) {
+            reject({ boError: ERRORS.OBJECT_NOT_FOUND });
+            return;
+          }
+          resolve(value);
+        }).catch(reject);
+    });
+  }
+
+  /**
+ * Update an object status
+ */
+  protected _updateStatus(id: string, status: BASE_STATUS): Promise<D> {
+    return new Promise<D>((resolve, reject) => {
+      const query: any = { _id: id, status: { $gt: BASE_STATUS.BS_UNKNOWN } };
+      const update: any = { $set: { status: status } };
+      this._model.findOneAndUpdate(query, update, { new: true })
         .then((value: D) => {
           if (!value) {
             reject({ boError: ERRORS.OBJECT_NOT_FOUND });

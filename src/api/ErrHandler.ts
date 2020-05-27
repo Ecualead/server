@@ -10,6 +10,7 @@
  */
 
 import { Logger } from './Logger';
+import { HTTP_STATUS } from '../middlewares/ResponseHandler';
 
 export class ErrHandler {
   private static _instance: ErrHandler;
@@ -30,5 +31,17 @@ export class ErrHandler {
       ErrHandler._instance = new ErrHandler();
     }
     return ErrHandler._instance;
+  }
+
+  parseError(err: any) {
+    let error = {
+      error: err.boError ? err.boError : HTTP_STATUS.HTTP_INTERNAL_SERVER_ERROR,
+    }
+    if (err.boData) {
+      (<any>error)['data'] = err.boData;
+    }
+
+    this._logger.error('Request error', { error: err.stack, response: error });
+    return error;
   }
 }
