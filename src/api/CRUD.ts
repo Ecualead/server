@@ -5,7 +5,7 @@
  * @Project: ProjectName
  * @Filename: CRUD.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-05-27T00:27:08-05:00
+ * @Last modified time: 2020-05-30T07:24:35-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -44,6 +44,11 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   public update(id: string, data: T, query?: any): Promise<D> {
     this._logger.debug('Updating document', { id: id, data: data });
     return new Promise<D>((resolve, reject) => {
+      /* Ensuere query is defined */
+      if(!query){
+        query = {};
+      }
+
       query['_id'] = id;
       if(!query['status']){
         query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
@@ -66,6 +71,11 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   public fetch(id: string, query?: any): Promise<D> {
     this._logger.debug('Fetch document', { id: id });
     return new Promise<D>((resolve, reject) => {
+      /* Ensuere query is defined */
+      if(!query){
+        query = {};
+      }
+
       query['_id'] = id;
       if(!query['status']){
         query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
@@ -86,6 +96,11 @@ export abstract class CRUD<T, D extends mongoose.Document>{
    */
   public fetchAll(query?: any): mongoose.QueryCursor<D> {
     this._logger.debug('Fetch all documents');
+    /* Ensuere query is defined */
+    if(!query){
+      query = {};
+    }
+    /* Check for defined status */
     if(!query['status']){
       query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
     }
@@ -98,6 +113,11 @@ export abstract class CRUD<T, D extends mongoose.Document>{
   public delete(id: string, query?: any): Promise<D> {
     this._logger.debug('Delete document', { id: id });
     return new Promise<D>((resolve, reject) => {
+      /* Ensuere query is defined */
+      if(!query){
+        query = {};
+      }
+
       query['_id'] = id;
       if(!query['status']){
         query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
@@ -119,6 +139,11 @@ export abstract class CRUD<T, D extends mongoose.Document>{
  */
   protected _updateStatus(id: string, status: BASE_STATUS, query?: any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
+      /* Ensuere query is defined */
+      if(!query){
+        query = {};
+      }
+
       query['_id'] = id;
       if(!query['status']){
         query['status'] = { $gt: BASE_STATUS.BS_UNKNOWN };
