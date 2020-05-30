@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: HttpServer.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-04-05T22:47:55-05:00
+ * @Last modified time: 2020-05-27T00:28:35-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -22,7 +22,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Server, createServer } from 'http';
 import { Logger } from './Logger';
 import { ISettings } from './ISettings';
-import { HTTP_STATUS } from '../types/status';
+import { HTTP_STATUS } from '../middlewares/ResponseHandler';
 
 /**
  * Standar Express Http Server handler
