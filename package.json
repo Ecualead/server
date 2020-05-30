@@ -1,11 +1,11 @@
 {
   "name": "@ikoabo/core_srv",
-  "version": "1.0.25",
+  "version": "1.0.27",
   "description": "IKOABO Core Microservice API",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "engines": {
-    "npm": ">=12.16.1"
+    "npm": ">=12.16.0"
   },
   "scripts": {
     "build": "tsc",
