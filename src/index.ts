@@ -5,7 +5,7 @@
  * @Project: IKOABO Core Microservice API
  * @Filename: index.ts
  * @Last modified by:   millo
- * @Last modified time: 2020-03-30T03:14:43-05:00
+ * @Last modified time: 2020-05-27T00:28:57-05:00
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
@@ -23,7 +23,6 @@ export * from './middlewares/ValidatorObjectId';
 
 /* Export types */
 export * from './types/errors';
-export * from './types/status';
 
 /* Export utils */
 export * from './utils/Objects';
