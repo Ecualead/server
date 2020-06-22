@@ -16,6 +16,10 @@ export * from './api/ISettings';
 export * from './api/Logger';
 export * from './api/CRUD';
 
+/* Export models */
+export * from './models/base.model';
+export * from './models/geojson.model';
+
 /* Export middlewares */
 export * from './middlewares/ResponseHandler';
 export * from './middlewares/Validator';
