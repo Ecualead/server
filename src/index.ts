@@ -27,6 +27,7 @@ export * from './middlewares/ValidatorObjectId';
 
 /* Export types */
 export * from './types/errors';
+export * from './types/status';
 
 /* Export utils */
 export * from './utils/Objects';
