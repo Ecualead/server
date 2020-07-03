@@ -12,13 +12,7 @@
 import mongoose from 'mongoose';
 import { Logger } from './Logger';
 import { ERRORS } from '../types/errors';
-
-export enum BASE_STATUS{
-  BS_DELETED = -1,
-  BS_UNKNOWN = 0,
-  BS_DISABLED = 1,
-  BS_ENABLED = 2,
-}
+import { BASE_STATUS } from '../types/status';
 
 export abstract class CRUD<T, D extends mongoose.Document>{
   protected _model: mongoose.Model<D>;
