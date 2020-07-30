@@ -9,8 +9,9 @@
  * @Copyright: Copyright 2020 IKOA Business Opportunity
  */
 
-import { Logger } from './Logger';
-import { HTTP_STATUS } from '../middlewares/ResponseHandler';
+import { Logger } from "./Logger";
+import { HTTP_STATUS } from "../middlewares/ResponseHandler";
+import { ERRORS } from "../types/errors";
 
 export class ErrHandler {
   private static _instance: ErrHandler;
@@ -20,7 +21,7 @@ export class ErrHandler {
    * Private constructor to allow singleton class
    */
   private constructor() {
-    this._logger = new Logger('ErrHandler');
+    this._logger = new Logger("ErrHandler");
   }
 
   /**
@@ -33,15 +34,52 @@ export class ErrHandler {
     return ErrHandler._instance;
   }
 
+  /**
+   * Parse the error information to provide a response
+   *
+   * @param err
+   */
   parseError(err: any) {
     let error = {
-      error: err.boError ? err.boError : HTTP_STATUS.HTTP_INTERNAL_SERVER_ERROR,
-    }
+      status: err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_BAD_REQUEST,
+      response: {
+        error: err.boError
+          ? err.boError
+          : HTTP_STATUS.HTTP_INTERNAL_SERVER_ERROR,
+      },
+    };
     if (err.boData) {
-      (<any>error)['data'] = err.boData;
+      (<any>error.response)["data"] = err.boData;
     }
 
-    this._logger.error('Request error', { error: err.stack, response: error });
+    /* Check for MongoDB errors */
+    if (err.name === "MongoError") {
+      switch (err.code) {
+        case 11000 /* Duplicated key error */:
+          error.response.error = ERRORS.OBJECT_DUPLICATED;
+          error.status = HTTP_STATUS.HTTP_CONFLICT;
+          break;
+        default:
+          error.response.error = ERRORS.INVALID_OPERATION;
+          error.status = HTTP_STATUS.HTTP_BAD_REQUEST;
+      }
+    } else {
+      /* Check OAuth2 errors */
+      if (err.code) {
+        switch (err.code) {
+          case 401:
+            error.response.error = ERRORS.INVALID_OPERATION;
+            error.status = HTTP_STATUS.HTTP_UNAUTHORIZED;
+            break;
+
+          default:
+            error.response.error = ERRORS.INVALID_OPERATION;
+            error.status = err.status || HTTP_STATUS.HTTP_FORBIDDEN;
+        }
+      }
+    }
+
+    this._logger.error("Request error", { error: err.stack, response: error });
     return error;
   }
 }

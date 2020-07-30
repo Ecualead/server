@@ -22,8 +22,8 @@ export enum HTTP_STATUS {
   HTTP_INTERNAL_SERVER_ERROR = 500,
 }
 
-import { Request, Response, NextFunction } from 'express';
-import { ErrHandler } from '../api/ErrHandler';
+import { Request, Response, NextFunction } from "express";
+import { ErrHandler } from "../api/ErrHandler";
 
 const ErrCtrl = ErrHandler.shared;
 
@@ -32,14 +32,19 @@ export class ResponseHandler {
    * Send a success response
    */
   public static success(_req: Request, res: Response, _next: NextFunction) {
-    res.status(HTTP_STATUS.HTTP_OK).json(res.locals['response']).end();
+    res.status(HTTP_STATUS.HTTP_OK).json(res.locals["response"]).end();
   }
 
   /**
    * Send an error response
    */
-  public static error(err: any, _req: Request, res: Response, _next: NextFunction) {
-    const status = err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_BAD_REQUEST;
-    res.status(status).json(ErrCtrl.parseError(err)).end();
+  public static error(
+    err: any,
+    _req: Request,
+    res: Response,
+    _next: NextFunction
+  ) {
+    const errObj = ErrCtrl.parseError(err);
+    res.status(errObj.status).json(errObj.response).end();
   }
 }
