@@ -1,21 +1,16 @@
 /**
- * @Author: Reinier Millo Sánchez <millo>
- * @Date:   2020-05-27T00:22:22-05:00
- * @Email:  reinier.millo88@gmail.com
- * @Project: ProjectName
- * @Filename: CRUD.ts
- * @Last modified by:   millo
- * @Last modified time: 2020-05-30T07:24:35-05:00
- * @Copyright: Copyright 2020 IKOA Business Opportunity
+ * Copyright (C) 2020 IKOA Business Opportunity
+ * All Rights Reserved
+ * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ *
+ * This file is part of the IKOA Business Opportunity Server API.
+ * It can't be copied and/or distributed without the express
+ * permission of the author.
  */
-
 import mongoose from "mongoose";
-import { Logger } from "./Logger";
-import { ERRORS } from "../types/errors";
-import { BASE_STATUS } from "../types/status";
+import { Logger } from "./logger.controller";
 import { Request, Response, NextFunction } from "express";
-import { Objects } from "../utils/Objects";
-import { HTTP_STATUS } from "../middlewares/ResponseHandler";
+import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects } from "@ikoabo/core";
 
 export abstract class CRUD<T, D extends mongoose.Document> {
   protected _model: mongoose.Model<D>;
@@ -41,17 +36,17 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    */
   public create(data: T): Promise<D> {
     this._logger.debug("Creating new document", data);
-    return this._model.create(data);
+    return this._model.create(<any>data);
   }
 
   /**
    * Update document object
    *
-   * @param id
-   * @param data
-   * @param query
+   * @param data 
+   * @param query 
+   * @param update 
    */
-  public update(id: string, data: T, query?: any): Promise<D> {
+  public update(id?: string, data?: T, query?: any, update?: any): Promise<D> {
     this._logger.debug("Updating document", { id: id, data: data });
     return new Promise<D>((resolve, reject) => {
       /* Ensuere query is defined */
@@ -59,18 +54,34 @@ export abstract class CRUD<T, D extends mongoose.Document> {
         query = {};
       }
 
-      query["_id"] = id;
-      if (!query["status"]) {
-        query["status"] = { $gt: BASE_STATUS.BS_UNKNOWN };
+      /* Check if id parameter is set */
+      if (id) {
+        query["_id"] = id;
       }
-      const update: any = { $set: data };
+
+      /* Ensure status filter to prevent update soft deleted data */
+      if (!query["status"]) {
+        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+      }
+
+      /* Ensure update variable is valid */
+      if (!update) {
+        update = {};
+      }
+
+      /* Check if data is set */
+      if (data) {
+        update["$set"] = data;
+      }
+
+      /* Find and update one document */
       this._model
         .findOneAndUpdate(query, update, { new: true })
         .then((value: D) => {
           if (!value) {
             reject({
-              boError: ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_NOT_FOUND,
+              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
             });
             return;
           }
@@ -112,7 +123,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
 
       /* Filter query by status */
       if (!query["status"]) {
-        query["status"] = { $gt: BASE_STATUS.BS_UNKNOWN };
+        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
       }
 
       /* Initialize the Mongoose query */
@@ -130,8 +141,8 @@ export abstract class CRUD<T, D extends mongoose.Document> {
         .then((value: D) => {
           if (!value) {
             reject({
-              boError: ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_NOT_FOUND,
+              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
             });
             return;
           }
@@ -161,11 +172,11 @@ export abstract class CRUD<T, D extends mongoose.Document> {
 
     /* Check for defined status */
     if (!query["status"]) {
-      query["status"] = { $gt: BASE_STATUS.BS_UNKNOWN };
+      query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
     }
 
     /* Initialize the Mongoose query */
-    let baseQuery = this._model.findOne(query, options ? options : {});
+    let baseQuery = this._model.find(query, options ? options : {});
 
     /* Check if the populate value is set */
     if (populate) {
@@ -176,6 +187,43 @@ export abstract class CRUD<T, D extends mongoose.Document> {
 
     /* Return cursor query */
     return baseQuery.cursor();
+  }
+
+  /**
+   * Fetch all objects as raw query
+   *
+   * @param query
+   * @param options
+   * @param populate
+   */
+  public fetchRaw(
+    query?: any,
+    options?: any,
+    populate?: string[]
+  ): mongoose.DocumentQuery<D[], D> {
+    this._logger.debug("Fetch all documents");
+    /* Ensuere query is defined */
+    if (!query) {
+      query = {};
+    }
+
+    /* Check for defined status */
+    if (!query["status"]) {
+      query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+    }
+
+    /* Initialize the Mongoose query */
+    let baseQuery = this._model.find(query, options ? options : {});
+
+    /* Check if the populate value is set */
+    if (populate) {
+      populate.forEach((value: string) => {
+        baseQuery = baseQuery.populate(value);
+      });
+    }
+
+    /* Return query */
+    return baseQuery;
   }
 
   /**
@@ -194,17 +242,17 @@ export abstract class CRUD<T, D extends mongoose.Document> {
 
       query["_id"] = id;
       if (!query["status"]) {
-        query["status"] = { $gt: BASE_STATUS.BS_UNKNOWN };
+        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
       }
 
-      const update: any = { $set: { status: BASE_STATUS.BS_SOFT_DELETE } };
+      const update: any = { $set: { status: SERVER_STATUS.SOFT_DELETE } };
       this._model
         .findByIdAndUpdate(query, update, { new: true })
         .then((value: D) => {
           if (!value) {
             reject({
-              boError: ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_NOT_FOUND,
+              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
             });
             return;
           }
@@ -223,7 +271,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    */
   protected _updateStatus(
     id: string,
-    status: BASE_STATUS,
+    status: SERVER_STATUS,
     query?: any
   ): Promise<D> {
     return new Promise<D>((resolve, reject) => {
@@ -234,7 +282,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
 
       query["_id"] = id;
       if (!query["status"]) {
-        query["status"] = { $gt: BASE_STATUS.BS_UNKNOWN };
+        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
       }
       const update: any = { $set: { status: status } };
       this._model
@@ -242,8 +290,8 @@ export abstract class CRUD<T, D extends mongoose.Document> {
         .then((value: D) => {
           if (!value) {
             reject({
-              boError: ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_NOT_FOUND,
+              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
             });
             return;
           }
@@ -265,18 +313,18 @@ export abstract class CRUD<T, D extends mongoose.Document> {
       this.fetch(Objects.get(req, path, ""))
         .then((value: any) => {
           /* Check if the given module is valid */
-          if (!value || value.status !== BASE_STATUS.BS_ENABLED) {
+          if (!value || value.status !== SERVER_STATUS.ENABLED) {
             return next({
-              boError: ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_NOT_FOUND,
+              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
             });
           }
 
           /* Check the object owner if its necessary */
           if (ownerStr && value.owner.toString() !== ownerStr) {
             return next({
-              boError: ERRORS.INVALID_OPERATION,
-              boStatus: HTTP_STATUS.HTTP_FORBIDDEN,
+              boError: SERVER_ERRORS.INVALID_OPERATION,
+              boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN,
             });
           }
 
