@@ -1,12 +1,11 @@
 /**
- * @Author: Reinier Millo Sánchez
- * @Date:   2020-03-24T04:13:17-05:00
- * @Email:  reinier.millo88@gmail.com
- * @Project: IKOABO Core Microservice API
- * @Filename: ISetting.ts
- * @Last modified by:   millo
- * @Last modified time: 2020-04-12T23:28:24-05:00
- * @Copyright: Copyright 2020 IKOA Business Opportunity
+ * Copyright (C) 2020 IKOA Business Opportunity
+ * All Rights Reserved
+ * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ *
+ * This file is part of the IKOA Business Opportunity Server API.
+ * It can't be copied and/or distributed without the express
+ * permission of the author.
  */
 
 /**

@@ -1,25 +1,34 @@
 /**
- * @Author: Reinier Millo Sánchez <millo>
- * @Date:   2020-03-25T03:45:18-05:00
- * @Email:  reinier.millo88@gmail.com
- * @Project: ProjectName
- * @Filename: ClusterServer.ts
- * @Last modified by:   millo
- * @Last modified time: 2020-04-05T22:49:40-05:00
- * @Copyright: Copyright 2020 IKOA Business Opportunity
+ * Copyright (C) 2020 IKOA Business Opportunity
+ * All Rights Reserved
+ * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ *
+ * This file is part of the IKOA Business Opportunity Server API.
+ * It can't be copied and/or distributed without the express
+ * permission of the author.
  */
-
 import cluster from 'cluster';
 import express from 'express';
-import { HttpServer } from './HttpServer';
-import { ISettings } from './ISettings';
-import { Logger, LOG_LEVEL } from './Logger';
+import { HttpServer } from './server.controller';
+import { ISettings } from '../models/settings.model';
+import { Logger, LOG_LEVEL } from './logger.controller';
 
-export interface IHooks {
+/**
+ * Slave process hooks to trigger during server initialization
+ */
+export interface ISlaveHooks {
   preMongo?: () => Promise<void>;
   postMongo?: () => Promise<void>;
   preExpress?: () => Promise<void>;
   postExpress?: (app: express.Application) => Promise<void>;
+  running?: () => Promise<void>;
+}
+
+/**
+ * Master process hooks to trigger during server initialization
+ */
+export interface IMasterHooks {
+  worker?: (worker: any) => Promise<void>;
 }
 
 /**
@@ -29,7 +38,8 @@ export class ClusterServer {
   private static _instance: ClusterServer;
   private _settings: ISettings;
   private _logger: Logger;
-  private _slaveHooks: IHooks;
+  private _slaveHooks: ISlaveHooks;
+  private _masterHooks: IMasterHooks;
 
   private constructor() {
     this._logger = new Logger('ClusterServer');
@@ -40,7 +50,7 @@ export class ClusterServer {
    *
    * @param settings  Service settings
    */
-  public static setup(settings: ISettings, hooks?: IHooks): ClusterServer {
+  public static setup(settings: ISettings, slaveHooks?: ISlaveHooks, masterHooks?: IMasterHooks): ClusterServer {
     if (ClusterServer._instance) {
       throw new Error('Cluster server its initialized');
     }
@@ -51,9 +61,17 @@ export class ClusterServer {
     /* Initialize the singleton class instance */
     ClusterServer._instance = new ClusterServer();
     ClusterServer._instance._settings = settings;
-    ClusterServer._instance._slaveHooks = hooks ? hooks : {};
+    ClusterServer._instance._slaveHooks = slaveHooks ? slaveHooks : {};
+    ClusterServer._instance._masterHooks = masterHooks ? masterHooks : {};
 
     return ClusterServer._instance;
+  }
+
+  /**
+   * Return the cluster import
+   */
+  public static get cluster() {
+    return cluster;
   }
 
   /**
@@ -94,13 +112,19 @@ export class ClusterServer {
     /* Initialize the number of required workers */
     const instances = this._settings.SERVICE.INSTANCES;
     for (let i = 0; i < instances; i++) {
-      cluster.fork();
+      const worker = cluster.fork();
+      if (this._masterHooks.worker) {
+        this._masterHooks.worker(worker);
+      }
     }
 
     /* Hanlde cluster worker restart on exit */
     cluster.on('exit', (worker, code, signal) => {
       this._logger.error('Cluster worker died', { pid: process.pid, worker: worker.id, code: code, signal: signal });
-      cluster.fork();
+      const newWorker = cluster.fork();
+      if (this._masterHooks.worker) {
+        this._masterHooks.worker(newWorker);
+      }
     });
   }
 
@@ -121,7 +145,12 @@ export class ClusterServer {
               this._slaveExpress(server, routes).then(() => {
                 this._slavePostExpress(server).then(() => {
                   /* Start the slave worker HTTP server */
-                  server.listen().then(resolve);
+                  server.listen(this._settings.SERVICE.PORT).then(() => {
+                    if (this._slaveHooks.running) {
+                      this._slaveHooks.running();
+                    }
+                    resolve();
+                  });
                 });
               });
             });
