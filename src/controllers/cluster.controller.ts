@@ -1,20 +1,21 @@
 /**
- * @Author: Reinier Millo Sánchez <millo>
- * @Date:   2020-03-25T03:45:18-05:00
- * @Email:  reinier.millo88@gmail.com
- * @Project: ProjectName
- * @Filename: ClusterServer.ts
- * @Last modified by:   millo
- * @Last modified time: 2020-05-03T17:50:32-05:00
- * @Copyright: Copyright 2020 IKOA Business Opportunity
+ * Copyright (C) 2020 IKOA Business Opportunity
+ * All Rights Reserved
+ * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ *
+ * This file is part of the IKOA Business Opportunity Server API.
+ * It can't be copied and/or distributed without the express
+ * permission of the author.
  */
-
 import cluster from 'cluster';
 import express from 'express';
-import { HttpServer } from './HttpServer';
-import { ISettings } from './ISettings';
-import { Logger, LOG_LEVEL } from './Logger';
+import { HttpServer } from './server.controller';
+import { ISettings } from '../models/settings.model';
+import { Logger, LOG_LEVEL } from './logger.controller';
 
+/**
+ * Slave process hooks to trigger during server initialization
+ */
 export interface ISlaveHooks {
   preMongo?: () => Promise<void>;
   postMongo?: () => Promise<void>;
@@ -23,6 +24,9 @@ export interface ISlaveHooks {
   running?: () => Promise<void>;
 }
 
+/**
+ * Master process hooks to trigger during server initialization
+ */
 export interface IMasterHooks {
   worker?: (worker: any) => Promise<void>;
 }
@@ -61,6 +65,13 @@ export class ClusterServer {
     ClusterServer._instance._masterHooks = masterHooks ? masterHooks : {};
 
     return ClusterServer._instance;
+  }
+
+  /**
+   * Return the cluster import
+   */
+  public static get cluster() {
+    return cluster;
   }
 
   /**
@@ -134,7 +145,7 @@ export class ClusterServer {
               this._slaveExpress(server, routes).then(() => {
                 this._slavePostExpress(server).then(() => {
                   /* Start the slave worker HTTP server */
-                  server.listen().then(() => {
+                  server.listen(this._settings.SERVICE.PORT).then(() => {
                     if (this._slaveHooks.running) {
                       this._slaveHooks.running();
                     }
