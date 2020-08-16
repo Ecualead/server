@@ -7,8 +7,7 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { Logger } from "./logger.controller";
-import { HTTP_STATUS, SERVER_ERRORS } from "@ikoabo/core";
+import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
 
 /**
  * Errors controller

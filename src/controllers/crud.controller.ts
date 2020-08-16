@@ -8,9 +8,8 @@
  * permission of the author.
  */
 import mongoose from "mongoose";
-import { Logger } from "./logger.controller";
 import { Request, Response, NextFunction } from "express";
-import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects } from "@ikoabo/core";
+import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects, Logger } from "@ikoabo/core";
 
 export abstract class CRUD<T, D extends mongoose.Document> {
   protected _model: mongoose.Model<D>;
@@ -323,7 +322,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
           /* Check the object owner if its necessary */
           if (ownerStr && value.owner.toString() !== ownerStr) {
             return next({
-              boError: SERVER_ERRORS.INVALID_OPERATION,
+              boError: SERVER_ERRORS.INVALID_OWNER,
               boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN,
             });
           }

@@ -18,9 +18,8 @@ import moment from "moment";
 import mongoose from "mongoose";
 import { Request, Response, NextFunction } from "express";
 import { Server, createServer } from "http";
-import { Logger } from "./logger.controller";
 import { ISettings } from "../models/settings.model";
-import { HTTP_STATUS, SERVER_ERRORS } from "@ikoabo/core";
+import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
 
 /**
  * Standar Express Http Server handler
