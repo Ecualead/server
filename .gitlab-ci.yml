@@ -1,0 +1,19 @@
+image: node:latest
+
+services:
+
+cache:
+  paths:
+    - node_modules/
+
+tests:
+  script:
+    - npm config set registry https://nxs.ikoabo.com/repository/node/
+    - npm install
+    - npm run test
+
+coverage:
+  script:
+    - npm config set registry https://nxs.ikoabo.com/repository/node/
+    - npm install
+    - npm run coverage

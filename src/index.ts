@@ -11,7 +11,6 @@
 /* Export api controllers */
 export { ClusterServer, IMasterHooks, ISlaveHooks } from './controllers/cluster.controller';
 export { HttpServer } from './controllers/server.controller';
-export { Logger, LOG_LEVEL } from './controllers/logger.controller';
 export { CRUD } from './controllers/crud.controller';
 export { ErrorCtrl } from './controllers/error.controller';
 

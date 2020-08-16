@@ -11,7 +11,7 @@ import cluster from 'cluster';
 import express from 'express';
 import { HttpServer } from './server.controller';
 import { ISettings } from '../models/settings.model';
-import { Logger, LOG_LEVEL } from './logger.controller';
+import { Logger, LOG_LEVEL } from '@ikoabo/core';
 
 /**
  * Slave process hooks to trigger during server initialization
