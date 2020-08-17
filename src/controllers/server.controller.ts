@@ -7,19 +7,18 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import express from "express";
+import { Server, createServer } from "http";
+import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
 import bodyParser from "body-parser";
-import logger from "morgan";
-import methodOverride from "method-override";
 import cors from "cors";
+import express, { Request, Response, NextFunction } from "express";
 import Helmet from "helmet";
-import onFinished from "on-finished";
+import methodOverride from "method-override";
 import moment from "moment";
 import mongoose from "mongoose";
-import { Request, Response, NextFunction } from "express";
-import { Server, createServer } from "http";
+import logger from "morgan";
+import onFinished from "on-finished";
 import { ISettings } from "../models/settings.model";
-import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
 
 /**
  * Standar Express Http Server handler
@@ -78,18 +77,14 @@ export class HttpServer {
     return new Promise<any>((resolve, reject) => {
       /* Connect to the MongoDB server */
       mongoose.set("useFindAndModify", false);
-      mongoose.set(
-        "useCreateIndex",
-        !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX
-      );
+      mongoose.set("useCreateIndex", !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX);
       mongoose
         .connect(HttpServer._settings.MONGODB.URI, {
           useNewUrlParser: !HttpServer._settings.MONGODB.NOT_USE_NEW_URL_PARSER,
           useCreateIndex: !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX,
           autoIndex: !HttpServer._settings.MONGODB.NOT_AUTO_INDEX,
           poolSize: HttpServer._settings.MONGODB.POOL_SIZE || 10,
-          useUnifiedTopology: !HttpServer._settings.MONGODB
-            .NOT_USE_UNIFIED_TOPOLOGY,
+          useUnifiedTopology: !HttpServer._settings.MONGODB.NOT_USE_UNIFIED_TOPOLOGY
         })
         .then(() => {
           this._logger.info("Connected to MongoDB", { worker: this.worker });
@@ -118,7 +113,7 @@ export class HttpServer {
 
       /* Check to enable body parser */
       if (!HttpServer._settings.SERVICE.NOT_BODY_PARSER) {
-        this._app.use(bodyParser({ limit: '50mb' }));
+        this._app.use(bodyParser({ limit: "50mb" }));
         this._app.use(bodyParser.json());
         this._app.use(bodyParser.urlencoded({ extended: true }));
       }
@@ -147,51 +142,42 @@ export class HttpServer {
       this._app.use(Helmet.ieNoOpen());
       this._app.use(
         Helmet.hsts({
-          maxAge: 5184000,
+          maxAge: 5184000
         })
       );
 
       /* Set trust proxy */
-      this._app.set(
-        "trust proxy",
-        !HttpServer._settings.SERVICE.NOT_TRUST_PROXY
-      );
+      this._app.set("trust proxy", !HttpServer._settings.SERVICE.NOT_TRUST_PROXY);
 
       // Express configuration
-      this._app.set(
-        "interface",
-        HttpServer._settings.SERVICE.INTERFACE || "127.0.0.1"
-      );
+      this._app.set("interface", HttpServer._settings.SERVICE.INTERFACE || "127.0.0.1");
       this._app.set("port", HttpServer._settings.SERVICE.PORT);
       this._app.set("env", HttpServer._settings.SERVICE.ENV);
 
       /* Increment debug output on offline development platforms */
       if (HttpServer._settings.SERVICE.ENV !== "production") {
         this._app.use(logger("dev"));
-        this._app.all(
-          "/*",
-          (req: Request, res: Response, next: NextFunction) => {
-            onFinished(res, (err: any, resp: any) => {
-              let requestTrace: any = {
-                stamp: moment.utc().toDate().getTime(),
-                err: err,
-                req: {
-                  method: req.method,
-                  url: req.originalUrl,
-                  body: req.body,
-                  headers: req.headers,
-                },
-                res: {
-                  status: resp.statusCode,
-                  message: resp.statusMessage,
-                },
-                worker: this.worker,
-              };
-              this._logger.debug(" Request trace", requestTrace);
-            });
-            next();
-          }
-        );
+        this._app.all("/*", (req: Request, res: Response, next: NextFunction) => {
+          onFinished(res, (err: any, resp: any) => {
+            const requestTrace: any = {
+              stamp: moment.utc().toDate().getTime(),
+              err: err,
+              req: {
+                method: req.method,
+                url: req.originalUrl,
+                body: req.body,
+                headers: req.headers
+              },
+              res: {
+                status: resp.statusCode,
+                message: resp.statusMessage
+              },
+              worker: this.worker
+            };
+            this._logger.debug(" Request trace", requestTrace);
+          });
+          next();
+        });
       } else {
         this._app.use(logger("tiny"));
       }
@@ -245,13 +231,13 @@ export class HttpServer {
         port === null ? this._app.get("port") : port,
         this._app.get("interface"),
         () => {
-          let meta: any = {
+          const meta: any = {
             interface: this._app.get("interface"),
             port: this._app.get("port"),
             env: this._app.get("env"),
             version: `${HttpServer._settings.VERSION.MAIN}.${HttpServer._settings.VERSION.MINOR}.${HttpServer._settings.VERSION.REVISION}`,
             pid: process.pid,
-            worker: this.worker,
+            worker: this.worker
           };
 
           this._logger.info("Service instance is running", meta);

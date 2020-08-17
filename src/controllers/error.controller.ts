@@ -40,16 +40,14 @@ class Errors {
    * @param err
    */
   parseError(err: any) {
-    let error = {
+    const error: any = {
       status: err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_4XX_BAD_REQUEST,
       response: {
-        error: err.boError
-          ? err.boError
-          : SERVER_ERRORS.UNKNOW_ERROR,
-      },
+        error: err.boError ? err.boError : SERVER_ERRORS.UNKNOW_ERROR
+      }
     };
     if (err.boData) {
-      (<any>error.response)["data"] = err.boData;
+      error.response["data"] = err.boData;
     }
 
     /* Check for MongoDB errors */
