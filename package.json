@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "deploy": "tsc & npm publish",
+    "deploy": "tsc && npm publish --access public",
+    "lint": "tsc --noEmit && eslint '*/**/*.ts' --fix",
     "test": "mocha --require ts-node/register tests/*.ts",
     "coverage": "nyc npm run test"
   },
@@ -37,7 +38,7 @@
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
-    "@ikoabo/core": "^1.0.2",
+    "@ikoabo/core": "^1.0.3",
     "@typegoose/typegoose": "^7.2.0",
     "async": "^3.2.0",
     "body-parser": "^1.19.0",
@@ -61,10 +62,26 @@
     "@types/mongoose": "^5.7.36",
     "@types/morgan": "^1.9.1",
     "@types/on-finished": "^2.3.1",
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
     "chai": "^4.2.0",
+    "eslint": "^7.7.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-prettier": "^3.1.4",
     "mocha": "^7.2.0",
     "nyc": "^15.1.0",
+    "prettier": "^2.0.5",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix ",
+      "git add"
+    ]
   }
 }
