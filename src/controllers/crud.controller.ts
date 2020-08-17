@@ -7,9 +7,9 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import mongoose from "mongoose";
-import { Request, Response, NextFunction } from "express";
 import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects, Logger } from "@ikoabo/core";
+import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 
 export abstract class CRUD<T, D extends mongoose.Document> {
   protected _model: mongoose.Model<D>;
@@ -41,9 +41,9 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   /**
    * Update document object
    *
-   * @param data 
-   * @param query 
-   * @param update 
+   * @param data
+   * @param query
+   * @param update
    */
   public update(id?: string, data?: T, query?: any, update?: any): Promise<D> {
     this._logger.debug("Updating document", { id: id, data: data });
@@ -80,7 +80,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
           }
@@ -98,16 +98,11 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    * @param options
    * @param populate
    */
-  public fetch(
-    id?: string,
-    query?: any,
-    options?: any,
-    populate?: string[]
-  ): Promise<D> {
+  public fetch(id?: string, query?: any, options?: any, populate?: string[]): Promise<D> {
     this._logger.debug("Fetch document", {
       id: id,
       options: options,
-      populate: populate,
+      populate: populate
     });
     return new Promise<D>((resolve, reject) => {
       /* Ensuere query is defined */
@@ -141,7 +136,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
           }
@@ -158,11 +153,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    * @param options
    * @param populate
    */
-  public fetchAll(
-    query?: any,
-    options?: any,
-    populate?: string[]
-  ): mongoose.QueryCursor<D> {
+  public fetchAll(query?: any, options?: any, populate?: string[]): mongoose.QueryCursor<D> {
     this._logger.debug("Fetch all documents");
     /* Ensuere query is defined */
     if (!query) {
@@ -195,11 +186,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    * @param options
    * @param populate
    */
-  public fetchRaw(
-    query?: any,
-    options?: any,
-    populate?: string[]
-  ): mongoose.DocumentQuery<D[], D> {
+  public fetchRaw(query?: any, options?: any, populate?: string[]): mongoose.DocumentQuery<D[], D> {
     this._logger.debug("Fetch all documents");
     /* Ensuere query is defined */
     if (!query) {
@@ -251,7 +238,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
           }
@@ -268,11 +255,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    * @param status New status of the modified object
    * @param query Aditional data query to fetch the object to be updated
    */
-  protected _updateStatus(
-    id: string,
-    status: SERVER_STATUS,
-    query?: any
-  ): Promise<D> {
+  protected _updateStatus(id: string, status: SERVER_STATUS, query?: any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Ensuere query is defined */
       if (!query) {
@@ -290,7 +273,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
           }
@@ -308,14 +291,14 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    */
   public validate(path: string, owner?: string) {
     return (req: Request, res: Response, next: NextFunction) => {
-      let ownerStr = owner ? Objects.get(res, owner, null) : null;
+      const ownerStr = owner ? Objects.get(res, owner, null) : null;
       this.fetch(Objects.get(req, path, ""))
-        .then((value: any) => {
+        .then((value: any): void => {
           /* Check if the given module is valid */
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
             return next({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND,
+              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
           }
 
@@ -323,7 +306,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
           if (ownerStr && value.owner.toString() !== ownerStr) {
             return next({
               boError: SERVER_ERRORS.INVALID_OWNER,
-              boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN,
+              boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN
             });
           }
 

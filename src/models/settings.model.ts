@@ -32,7 +32,7 @@ export interface ISettings {
     SERVER: string;
     ID: string;
     SECRET: string;
-  }
+  };
 
   /* Service version */
   VERSION: {

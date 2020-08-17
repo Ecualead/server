@@ -7,9 +7,9 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
+import { SERVER_STATUS } from "@ikoabo/core";
 import { prop } from "@typegoose/typegoose";
 import mongoose from "mongoose";
-import { SERVER_STATUS } from "@ikoabo/core"
 
 export class BaseModel {
   @prop({ required: true, default: SERVER_STATUS.ENABLED })
