@@ -8,12 +8,10 @@ cache:
 
 tests:
   script:
-    - npm config set registry https://nxs.ikoabo.com/repository/node/
     - npm install
     - npm run test
 
 coverage:
   script:
-    - npm config set registry https://nxs.ikoabo.com/repository/node/
     - npm install
     - npm run coverage
