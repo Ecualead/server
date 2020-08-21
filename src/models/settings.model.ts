@@ -1,11 +1,8 @@
 /**
  * Copyright (C) 2020 IKOA Business Opportunity
- * All Rights Reserved
  * Author: Reinier Millo Sánchez <millo@ikoabo.com>
  *
  * This file is part of the IKOA Business Opportunity Server API.
- * It can't be copied and/or distributed without the express
- * permission of the author.
  */
 
 /**
@@ -14,31 +11,11 @@
 export interface ISettings {
   /* Service information */
   SERVICE: {
-    NAME: string;
-    LOG: string;
-    PORT: number;
-    INTERFACE?: string;
-    ENV?: string;
-    INSTANCES: number;
     NOT_TRUST_PROXY?: boolean;
     NOT_CORS?: boolean;
     NOT_METHOD_OVERRIDE?: boolean;
     NOT_BODY_PARSER?: boolean;
     NOT_REAL_IP?: boolean;
-  };
-
-  /* Service authentication */
-  AUTH?: {
-    SERVER: string;
-    ID: string;
-    SECRET: string;
-  };
-
-  /* Service version */
-  VERSION: {
-    MAIN: number;
-    MINOR: number;
-    REVISION: number;
   };
 
   /* Database connection */
