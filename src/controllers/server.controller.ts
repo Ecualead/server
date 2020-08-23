@@ -1,15 +1,11 @@
 /**
  * Copyright (C) 2020 IKOA Business Opportunity
- * All Rights Reserved
  * Author: Reinier Millo Sánchez <millo@ikoabo.com>
  *
  * This file is part of the IKOA Business Opportunity Server API.
- * It can't be copied and/or distributed without the express
- * permission of the author.
  */
 import { Server, createServer } from "http";
 import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
-import bodyParser from "body-parser";
 import cors from "cors";
 import express, { Request, Response, NextFunction } from "express";
 import Helmet from "helmet";
@@ -18,14 +14,13 @@ import moment from "moment";
 import mongoose from "mongoose";
 import logger from "morgan";
 import onFinished from "on-finished";
-import { ISettings } from "../models/settings.model";
+import VersionRouter from "../middlewares/version.middleware";
 
 /**
  * Standar Express Http Server handler
  */
 export class HttpServer {
   private static _instance: HttpServer;
-  private static _settings: ISettings;
   private _app: express.Application;
   private _http: Server;
   private _logger: Logger;
@@ -39,26 +34,11 @@ export class HttpServer {
   }
 
   /**
-   * Initialize the singleton server instance
-   *
-   * @param settings  Service predefined settings
-   */
-  public static setup(settings: ISettings): HttpServer {
-    if (HttpServer._instance) {
-      throw new Error("HttpServer its initialized");
-    }
-
-    this._settings = settings;
-    HttpServer._instance = new HttpServer();
-    return HttpServer._instance;
-  }
-
-  /**
    * Return the singleton server instance
    */
   public static get shared(): HttpServer {
     if (!HttpServer._instance) {
-      throw new Error("HttpServer not initialized");
+      HttpServer._instance = new HttpServer();
     }
     return HttpServer._instance;
   }
@@ -75,16 +55,24 @@ export class HttpServer {
    */
   public initMongo(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
+      /* Check if mongodb uri is set or not */
+      if (!process.env.MONGODB_URI) {
+        this._logger.warn("No database configuration found. Skip database connection.", {
+          worker: this.worker
+        });
+        return resolve();
+      }
+
       /* Connect to the MongoDB server */
       mongoose.set("useFindAndModify", false);
-      mongoose.set("useCreateIndex", !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX);
+      mongoose.set("useCreateIndex", process.env.MONGODB_NOT_USE_CREATE_INDEX !== "true");
       mongoose
-        .connect(HttpServer._settings.MONGODB.URI, {
-          useNewUrlParser: !HttpServer._settings.MONGODB.NOT_USE_NEW_URL_PARSER,
-          useCreateIndex: !HttpServer._settings.MONGODB.NOT_USE_CREATE_INDEX,
-          autoIndex: !HttpServer._settings.MONGODB.NOT_AUTO_INDEX,
-          poolSize: HttpServer._settings.MONGODB.POOL_SIZE || 10,
-          useUnifiedTopology: !HttpServer._settings.MONGODB.NOT_USE_UNIFIED_TOPOLOGY
+        .connect(process.env.MONGODB_URI, {
+          useNewUrlParser: process.env.MONGODB_NOT_USE_NEW_URL_PARSER !== "true",
+          useCreateIndex: process.env.MONGODB_NOT_USE_CREATE_INDEX !== "true",
+          autoIndex: process.env.MONGODB_NOT_AUTO_INDEX !== "true",
+          poolSize: parseInt(process.env.MONGODB_POOL_SIZE || "10"),
+          useUnifiedTopology: process.env.MONGODB_NOT_USE_UNIFIED_TOPOLOGY !== "true"
         })
         .then(() => {
           this._logger.info("Connected to MongoDB", { worker: this.worker });
@@ -111,22 +99,28 @@ export class HttpServer {
       this._app = express();
       this._http = createServer(this._app);
 
-      /* Check to enable body parser */
-      if (!HttpServer._settings.SERVICE.NOT_BODY_PARSER) {
-        this._app.use(bodyParser({ limit: "50mb" }));
-        this._app.use(bodyParser.json());
-        this._app.use(bodyParser.urlencoded({ extended: true }));
+      /* Check for más body size */
+      const options: any = {};
+      if (process.env.HTTP_BODY_SIZE) {
+        options["limit"] = process.env.HTTP_BODY_SIZE;
       }
 
+      /* Enable JSON parser */
+      this._app.use(express.json(options));
+
+      /* Enable URL encoded parser */
+      options["extended"] = true;
+      this._app.use(express.urlencoded(options));
+
       /* Check to enable method override */
-      if (!HttpServer._settings.SERVICE.NOT_METHOD_OVERRIDE) {
+      if (process.env.HTTP_NOT_METHOD_OVERRIDE !== "true") {
         this._app.use(methodOverride("X-HTTP-Method")); // Microsoft
         this._app.use(methodOverride("X-HTTP-Method-Override")); // Google/GData
         this._app.use(methodOverride("X-Method-Override")); // IBM
       }
 
       /* Check to enable CORS */
-      if (!HttpServer._settings.SERVICE.NOT_CORS) {
+      if (process.env.HTT_NOT_CORS !== "true") {
         this._app.use(cors());
       }
 
@@ -147,15 +141,15 @@ export class HttpServer {
       );
 
       /* Set trust proxy */
-      this._app.set("trust proxy", !HttpServer._settings.SERVICE.NOT_TRUST_PROXY);
+      this._app.set("trust proxy", process.env.HTTP_NOT_TRUST_PROXY !== "true");
 
-      // Express configuration
-      this._app.set("interface", HttpServer._settings.SERVICE.INTERFACE || "127.0.0.1");
-      this._app.set("port", HttpServer._settings.SERVICE.PORT);
-      this._app.set("env", HttpServer._settings.SERVICE.ENV);
+      /* Express configuration */
+      this._app.set("interface", process.env.INTERFACE || "127.0.0.1");
+      this._app.set("port", process.env.PORT || "3000");
+      this._app.set("env", process.env.NODE_ENV || "dev");
 
       /* Increment debug output on offline development platforms */
-      if (HttpServer._settings.SERVICE.ENV !== "production") {
+      if (process.env.NODE_ENV !== "production") {
         this._app.use(logger("dev"));
         this._app.all("/*", (req: Request, res: Response, next: NextFunction) => {
           onFinished(res, (err: any, resp: any) => {
@@ -170,7 +164,8 @@ export class HttpServer {
               },
               res: {
                 status: resp.statusCode,
-                message: resp.statusMessage
+                message: resp.statusMessage,
+                locals: resp.locals
               },
               worker: this.worker
             };
@@ -183,17 +178,18 @@ export class HttpServer {
       }
 
       /* Check to retrieve the real IP address of the request */
-      if (!HttpServer._settings.SERVICE.NOT_REAL_IP) {
-        this._app.use((req: any, res: Response, next: NextFunction) => {
-          /* Look for request IP address */
-          res.locals["ipAddr"] =
-            req.headers["x-caller-ip"] ||
-            req.headers["x-forwarded-for"] ||
-            req.ips[0] ||
-            req.connection.remoteAddress;
-          next();
-        });
-      }
+      this._app.use((req: any, res: Response, next: NextFunction) => {
+        /* Look for request IP address */
+        res.locals["ipAddr"] =
+          req.headers["x-caller-ip"] ||
+          req.headers["x-forwarded-for"] ||
+          req.ips[0] ||
+          req.connection.remoteAddress;
+        next();
+      });
+
+      /* Register default version route */
+      this._app.use("/version", VersionRouter);
 
       /* Register the Express routes */
       this._registerRoutes(routes);
@@ -235,7 +231,6 @@ export class HttpServer {
             interface: this._app.get("interface"),
             port: this._app.get("port"),
             env: this._app.get("env"),
-            version: `${HttpServer._settings.VERSION.MAIN}.${HttpServer._settings.VERSION.MINOR}.${HttpServer._settings.VERSION.REVISION}`,
             pid: process.pid,
             worker: this.worker
           };

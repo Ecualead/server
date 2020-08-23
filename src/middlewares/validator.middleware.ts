@@ -1,11 +1,8 @@
 /**
  * Copyright (C) 2020 IKOA Business Opportunity
- * All Rights Reserved
  * Author: Reinier Millo Sánchez <millo@ikoabo.com>
  *
  * This file is part of the IKOA Business Opportunity Server API.
- * It can't be copied and/or distributed without the express
- * permission of the author.
  */
 import JoiBase from "@hapi/joi";
 import { SERVER_ERRORS, HTTP_STATUS } from "@ikoabo/core";
