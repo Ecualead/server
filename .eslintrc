@@ -47,12 +47,6 @@
         "includeExports": true
       }
     ],
-    "import/order": [
-      "error",
-      {
-        "newlines-between": "never"
-      }
-    ],
     "semi": [
       "error",
       "always"
