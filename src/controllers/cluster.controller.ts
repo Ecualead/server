@@ -48,10 +48,7 @@ export class ClusterServer {
    *
    * @param settings  Service settings
    */
-  public static setup(
-    slaveHooks?: ISlaveHooks,
-    masterHooks?: IMasterHooks
-  ): ClusterServer {
+  public static setup(slaveHooks?: ISlaveHooks, masterHooks?: IMasterHooks): ClusterServer {
     if (ClusterServer._instance) {
       throw new Error("Cluster server its initialized");
     }
@@ -111,7 +108,7 @@ export class ClusterServer {
     this._logger.info("Cluster master process is running", { pid: process.pid });
 
     /* Initialize the number of required workers */
-    const instances = parseInt(process.env.INSTANCES || '1');
+    const instances = parseInt(process.env.INSTANCES || "1");
     for (let i = 0; i < instances; i++) {
       const worker = cluster.fork();
       if (this._masterHooks.worker) {
@@ -151,7 +148,7 @@ export class ClusterServer {
               this._slaveExpress(server, routes).then(() => {
                 this._slavePostExpress(server).then(() => {
                   /* Start the slave worker HTTP server */
-                  server.listen(parseInt(process.env.PORT || '3000')).then(() => {
+                  server.listen(parseInt(process.env.PORT || "3000")).then(() => {
                     if (this._slaveHooks.running) {
                       this._slaveHooks.running();
                     }

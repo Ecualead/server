@@ -57,7 +57,9 @@ export class HttpServer {
     return new Promise<any>((resolve, reject) => {
       /* Check if mongodb uri is set or not */
       if (!process.env.MONGODB_URI) {
-        this._logger.warn("No database configuration found. Skip database connection.", { worker: this.worker });
+        this._logger.warn("No database configuration found. Skip database connection.", {
+          worker: this.worker
+        });
         return resolve();
       }
 
@@ -98,16 +100,16 @@ export class HttpServer {
       this._http = createServer(this._app);
 
       /* Check for más body size */
-      let options: any = {};
+      const options: any = {};
       if (process.env.HTTP_BODY_SIZE) {
-        options['limit'] = process.env.HTTP_BODY_SIZE;
+        options["limit"] = process.env.HTTP_BODY_SIZE;
       }
 
       /* Enable JSON parser */
       this._app.use(express.json(options));
 
       /* Enable URL encoded parser */
-      options['extended'] = true;
+      options["extended"] = true;
       this._app.use(express.urlencoded(options));
 
       /* Check to enable method override */
@@ -143,8 +145,8 @@ export class HttpServer {
 
       /* Express configuration */
       this._app.set("interface", process.env.INTERFACE || "127.0.0.1");
-      this._app.set("port", process.env.PORT || '3000');
-      this._app.set("env", process.env.NODE_ENV || 'dev');
+      this._app.set("port", process.env.PORT || "3000");
+      this._app.set("env", process.env.NODE_ENV || "dev");
 
       /* Increment debug output on offline development platforms */
       if (process.env.NODE_ENV !== "production") {
