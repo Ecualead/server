@@ -24,9 +24,17 @@
     "url": "git+https://gitlab.com/ikoabo/packages/server.git"
   },
   "keywords": [
-    "ikoabo",
-    "server",
-    "microservice"
+    "ikoabo", 
+    "server", 
+    "utilities functions", 
+    "express", 
+    "microservice", 
+    "cluster", 
+    "crud", 
+    "validator", 
+    "response", 
+    "json", 
+    "error"
   ],
   "author": "Reinier Millo Sánchez <millo@ikoabo.com>",
   "license": "MIT",
