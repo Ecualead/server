@@ -7,8 +7,10 @@
 import cluster from "cluster";
 import { Logger, LOG_LEVEL } from "@ikoabo/core";
 import express from "express";
-import { ISettings } from "../models/settings.model";
 import { HttpServer } from "./server.controller";
+
+/* Initialize the logger */
+Logger.setLogLevel(process.env.LOG || LOG_LEVEL.ERROR);
 
 /**
  * Slave process hooks to trigger during server initialization
@@ -33,7 +35,6 @@ export interface IMasterHooks {
  */
 export class ClusterServer {
   private static _instance: ClusterServer;
-  private _settings: ISettings;
   private _logger: Logger;
   private _slaveHooks: ISlaveHooks;
   private _masterHooks: IMasterHooks;
@@ -48,7 +49,6 @@ export class ClusterServer {
    * @param settings  Service settings
    */
   public static setup(
-    settings: ISettings,
     slaveHooks?: ISlaveHooks,
     masterHooks?: IMasterHooks
   ): ClusterServer {
@@ -56,12 +56,8 @@ export class ClusterServer {
       throw new Error("Cluster server its initialized");
     }
 
-    /* Initialize the logger */
-    Logger.setLogLevel(settings.SERVICE.LOG || LOG_LEVEL.ERROR);
-
     /* Initialize the singleton class instance */
     ClusterServer._instance = new ClusterServer();
-    ClusterServer._instance._settings = settings;
     ClusterServer._instance._slaveHooks = slaveHooks ? slaveHooks : {};
     ClusterServer._instance._masterHooks = masterHooks ? masterHooks : {};
 
@@ -88,7 +84,7 @@ export class ClusterServer {
     customSlave?: (server: HttpServer, routes?: any) => void
   ) {
     /* Initialize the Http Server */
-    const server = HttpServer.setup(this._settings);
+    const server = HttpServer.shared;
 
     /* Handle the custer master process */
     if (cluster.isMaster) {
@@ -115,7 +111,7 @@ export class ClusterServer {
     this._logger.info("Cluster master process is running", { pid: process.pid });
 
     /* Initialize the number of required workers */
-    const instances = this._settings.SERVICE.INSTANCES;
+    const instances = parseInt(process.env.INSTANCES || '1');
     for (let i = 0; i < instances; i++) {
       const worker = cluster.fork();
       if (this._masterHooks.worker) {
@@ -155,7 +151,7 @@ export class ClusterServer {
               this._slaveExpress(server, routes).then(() => {
                 this._slavePostExpress(server).then(() => {
                   /* Start the slave worker HTTP server */
-                  server.listen(this._settings.SERVICE.PORT).then(() => {
+                  server.listen(parseInt(process.env.PORT || '3000')).then(() => {
                     if (this._slaveHooks.running) {
                       this._slaveHooks.running();
                     }

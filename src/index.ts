@@ -13,7 +13,6 @@ export { ErrorCtrl } from "./controllers/error.controller";
 
 /* Export models */
 export { BaseModel } from "./models/base.model";
-export { ISettings } from "./models/settings.model";
 
 /* Export middlewares */
 export { ResponseHandler } from "./middlewares/response.middleware";
