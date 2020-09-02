@@ -4,7 +4,7 @@
  *
  * This file is part of the IKOA Business Opportunity Server API.
  */
-import JoiBase from "@hapi/joi";
+import JoiBase from "joi";
 import { SERVER_ERRORS, HTTP_STATUS } from "@ikoabo/core";
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
