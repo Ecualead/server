@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.1.7] - 2020-09-03
+- Update package dependencies
+- Update eslint configuration
+
 ## [1.1.7] - 2020-09-02
 - Change @hapi/joi to joi dependency
 - Change express, mongoose and typegoose dependencies as peer dependencies
