@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [1.1.7] - 2020-09-03
+## [1.1.9] - 2020-09-03
 - Update package dependencies
 - Update eslint configuration
 
