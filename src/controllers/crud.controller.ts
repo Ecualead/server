@@ -290,7 +290,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
     return (req: Request, res: Response, next: NextFunction) => {
       const ownerStr = owner ? Objects.get(res, owner, null) : null;
       this.fetch(Objects.get(req, path, ""))
-        .then((value: any): void => {
+        .then((value: any) => {
           /* Check if the given module is valid */
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
             return next({
