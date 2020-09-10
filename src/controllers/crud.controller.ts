@@ -36,29 +36,34 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   }
 
   /**
+   * Prepare the mongoose query with an id string or query object
+   *
+   * @param queryId
+   */
+  private _prepareQuery(queryId: string | any) {
+    if (typeof queryId === "string") {
+      return { _id: queryId };
+    } else {
+      const status = Objects.get(queryId, "status", null);
+      if (status === null) {
+        queryId["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+      }
+      return queryId;
+    }
+  }
+
+  /**
    * Update document object
    *
-   * @param data
-   * @param query
+   * @param queryId
+   * @param dataSet
    * @param update
+   * @param options
    */
-  public update(id?: string, data?: T, query?: any, update?: any): Promise<D> {
-    this._logger.debug("Updating document", { id: id, data: data });
+  public update(queryId: string | any, dataSet?: T, update?: any, options?: any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
-      /* Ensuere query is defined */
-      if (!query) {
-        query = {};
-      }
-
-      /* Check if id parameter is set */
-      if (id) {
-        query["_id"] = id;
-      }
-
-      /* Ensure status filter to prevent update soft deleted data */
-      if (!query["status"]) {
-        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-      }
+      /* Prepare the query object */
+      const query = this._prepareQuery(queryId);
 
       /* Ensure update variable is valid */
       if (!update) {
@@ -66,13 +71,23 @@ export abstract class CRUD<T, D extends mongoose.Document> {
       }
 
       /* Check if data is set */
-      if (data) {
-        update["$set"] = data;
+      if (dataSet) {
+        update["$set"] = dataSet;
+      }
+
+      /* Ensure update variable is valid */
+      if (!options) {
+        options = {};
+      }
+
+      /* Check if the new option is set */
+      if (Objects.get(options, "new", null) === null) {
+        options["new"] = true;
       }
 
       /* Find and update one document */
       this._model
-        .findOneAndUpdate(query, update, { new: true })
+        .findOneAndUpdate(query, update, options)
         .then((value: D) => {
           if (!value) {
             reject({
@@ -90,32 +105,14 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   /**
    * Fetch and object
    *
-   * @param id
-   * @param query
+   * @param queryId
    * @param options
    * @param populate
    */
-  public fetch(id?: string, query?: any, options?: any, populate?: string[]): Promise<D> {
-    this._logger.debug("Fetch document", {
-      id: id,
-      options: options,
-      populate: populate
-    });
+  public fetch(queryId: string | any, options?: any, populate?: string[]): Promise<D> {
     return new Promise<D>((resolve, reject) => {
-      /* Ensuere query is defined */
-      if (!query) {
-        query = {};
-      }
-
-      /* Gilter query by ID */
-      if (id) {
-        query["_id"] = id;
-      }
-
-      /* Filter query by status */
-      if (!query["status"]) {
-        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-      }
+      /* Prepare the query object */
+      const query = this._prepareQuery(queryId);
 
       /* Initialize the Mongoose query */
       let baseQuery = this._model.findOne(query, options ? options : {});
@@ -146,21 +143,13 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   /**
    * Fetch all objects as stream cursor
    *
-   * @param query
+   * @param queryId
    * @param options
    * @param populate
    */
-  public fetchAll(query?: any, options?: any, populate?: string[]): mongoose.QueryCursor<D> {
-    this._logger.debug("Fetch all documents");
-    /* Ensuere query is defined */
-    if (!query) {
-      query = {};
-    }
-
-    /* Check for defined status */
-    if (!query["status"]) {
-      query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-    }
+  public fetchAll(queryId: any, options?: any, populate?: string[]): mongoose.QueryCursor<D> {
+    /* Prepare the query object */
+    const query = this._prepareQuery(queryId);
 
     /* Initialize the Mongoose query */
     let baseQuery = this._model.find(query, options ? options : {});
@@ -179,21 +168,17 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   /**
    * Fetch all objects as raw query
    *
-   * @param query
+   * @param queryId
    * @param options
    * @param populate
    */
-  public fetchRaw(query?: any, options?: any, populate?: string[]): mongoose.DocumentQuery<D[], D> {
-    this._logger.debug("Fetch all documents");
-    /* Ensuere query is defined */
-    if (!query) {
-      query = {};
-    }
-
-    /* Check for defined status */
-    if (!query["status"]) {
-      query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-    }
+  public fetchRaw(
+    queryId: any,
+    options?: any,
+    populate?: string[]
+  ): mongoose.DocumentQuery<D[], D> {
+    /* Prepare the query object */
+    const query = this._prepareQuery(queryId);
 
     /* Initialize the Mongoose query */
     let baseQuery = this._model.find(query, options ? options : {});
@@ -212,22 +197,12 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   /**
    * SoftDelete the given object
    *
-   * @param id ObjectID to be deleted
-   * @param query Additional query data to fetch object to be deleted
+   * @param queryId
    */
-  public delete(id: string, query?: any): Promise<D> {
-    this._logger.debug("Delete document", { id: id });
+  public delete(queryId: string | any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
-      /* Ensuere query is defined */
-      if (!query) {
-        query = {};
-      }
-
-      query["_id"] = id;
-      if (!query["status"]) {
-        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-      }
-
+      /* Prepare the query object */
+      const query = this._prepareQuery(queryId);
       const update: any = { $set: { status: SERVER_STATUS.SOFT_DELETE } };
       this._model
         .findByIdAndUpdate(query, update, { new: true })
@@ -248,21 +223,14 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   /**
    * Update an object status
    *
-   * @param id ObjectID of the object to be updated
-   * @param status New status of the modified object
-   * @param query Aditional data query to fetch the object to be updated
+   * @param queryId
+   * @param status
    */
-  protected _updateStatus(id: string, status: SERVER_STATUS, query?: any): Promise<D> {
+  protected _updateStatus(queryId: string, status: SERVER_STATUS): Promise<D> {
     return new Promise<D>((resolve, reject) => {
-      /* Ensuere query is defined */
-      if (!query) {
-        query = {};
-      }
+      /* Prepare the query object */
+      const query = this._prepareQuery(queryId);
 
-      query["_id"] = id;
-      if (!query["status"]) {
-        query["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-      }
       const update: any = { $set: { status: status } };
       this._model
         .findOneAndUpdate(query, update, { new: true })
