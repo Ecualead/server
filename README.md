@@ -48,13 +48,10 @@ To start your first server only needs develop the routes to be called, for examp
 import { Router, Request, Response, NextFunction } from "express";
 const router = Router();
 
-router.get(
-  "/hello",
-  (req: Request, res: Response, next: NextFunction) => {
-    res.send("Hello World");
-    res.end();
-  }
-);
+router.get("/hello", (req: Request, res: Response, next: NextFunction) => {
+  res.send("Hello World");
+  res.end();
+});
 
 export default router;
 ```
@@ -137,26 +134,33 @@ import MyRouter3 from "./routes3";
 const server = HttpServer.shared;
 
 /* Connect MongoDB database */
-server.initMongo()
+server
+  .initMongo()
   .then(() => {
     /* Init express server */
-    server.initExpress(0, {
+    server
+      .initExpress(0, {
         "/api/v1/greetings": MyRouter1,
         "/api/v1": [MyRouter2, MyRouter3]
-      }).then(() => {
+      })
+      .then(() => {
         /* Start http server */
-        server.listen(3000)
+        server
+          .listen(3000)
           .then(() => {
             // Server is running
-          }).catch((err) => {
+          })
+          .catch((err) => {
             console.error("Error starting http server: " + JSON.stringify(err));
             process.exit(-1);
           });
-      }).catch((err) => {
+      })
+      .catch((err) => {
         console.error("Error starting express server: " + JSON.stringify(err));
         process.exit(-1);
       });
-  }).catch((err) => {
+  })
+  .catch((err) => {
     console.error("Error connecting to MongoDB: " + JSON.stringify(err));
     process.exit(-1);
   });
@@ -187,7 +191,7 @@ Success handler always send responses in JSON format, it only transform the resp
 Error handler takes into account several error sources like MongoDB, Joi validators, authentication service or the platform error schema:
 
 ```js
-interface IError{
+interface IError {
   boError: number;
   boStatus: number;
   boData: any;
@@ -215,13 +219,13 @@ const router = Router();
 router.get(
   "/hello",
   (req: Request, res: Response, next: NextFunction) => {
-    if(req.query["error"]){
+    if (req.query["error"]) {
       /* Raise error handler */
-      return next({boError: 1012, boStatus: 403});
+      return next({ boError: 1012, boStatus: 403 });
     }
 
     /* Send response with success handler */
-    res.locals["response"]={
+    res.locals["response"] = {
       name: "John Doe",
       city: "New York",
       age: 25
@@ -243,22 +247,22 @@ Using validators router can be rewritten
 
 ```js
 import { Router, Request, Response, NextFunction } from "express";
-import { ResponseHandler,Validator, ValidateObjectId } from "@ikoabo/server";
+import { ResponseHandler, Validator, ValidateObjectId } from "@ikoabo/server";
 const router = Router();
 
 router.post(
   "/hello/:id",
-  Validator.joi(ValidateObjectId, 'params'), // Validate that :id parameter is an ObjectId
+  Validator.joi(ValidateObjectId, "params"), // Validate that :id parameter is an ObjectId
   Validator.joi(OtherJoiSchemaBody), // Validate the request body with the given schema
-  Validator.joi(OtherJoiSchemaQuery, 'query'), // Validate the request query parameters with the given schema
+  Validator.joi(OtherJoiSchemaQuery, "query"), // Validate the request query parameters with the given schema
   (req: Request, res: Response, next: NextFunction) => {
-    if(req.query["error"]){
+    if (req.query["error"]) {
       /* Raise error handler */
-      return next({boError: 1012, boStatus: 403});
+      return next({ boError: 1012, boStatus: 403 });
     }
 
     /* Send response with success handler */
-    res.locals["response"]={
+    res.locals["response"] = {
       name: "John Doe",
       city: "New York",
       age: 25
@@ -312,7 +316,7 @@ import { getModelForClass, prop, DocumentType, index } from "@typegoose/typegoos
 export class MyModel extends BaseModel {
   @prop({required: true, unique: true})
   name!: string;
-  
+
   /**
    * Get the mongoose data model
    */
@@ -372,12 +376,12 @@ abstract class CRUD<T, D extends mongoose.Document> {
   protected _logger: Logger;
 
   public create(data: T): Promise<D>;
-  public update(id?: string, data?: T, query?: any, update?: any): Promise<D>;
-  public fetch(id?: string, query?: any, options?: any, populate?: string[]): Promise<D>;
-  public fetchAll(query?: any, options?: any, populate?: string[]): mongoose.QueryCursor<D>;
-  public fetchRaw(query?: any, options?: any, populate?: string[]): mongoose.DocumentQuery<D[], D>;
-  public delete(id: string, query?: any): Promise<D>;
-  protected _updateStatus(id: string, status: SERVER_STATUS, query?: any): Promise<D>;
+  public update(queryId: string | any, data?: T, update?: any, options?: any): Promise<D>;
+  public fetch(queryId: string | any, options?: any, populate?: string[]): Promise<D>;
+  public fetchAll(queryId: any, options?: any, populate?: string[]): mongoose.QueryCursor<D>;
+  public fetchRaw(queryId: any, options?: any, populate?: string[]): mongoose.DocumentQuery<D[], D>;
+  public delete(queryId: string | any): Promise<D>;
+  protected _updateStatus(queryId: string | any, status: SERVER_STATUS): Promise<D>;
   public validate(path: string, owner?: string);
 }
 ```

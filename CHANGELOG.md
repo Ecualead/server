@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.1.10] - 2020-09-10
+- Update CRUD query parameter to handle id string or object query
+- Add options to update action inside CRUD
+
 ## [1.1.9] - 2020-09-03
 - Update package dependencies
 - Update eslint configuration
