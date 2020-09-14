@@ -41,7 +41,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    * @param queryId
    */
   private _prepareQuery(queryId: string | any) {
-    if (typeof queryId === "string") {
+    if (typeof queryId === "string" || mongoose.isValidObjectId(queryId)) {
       return { _id: queryId };
     } else {
       const status = Objects.get(queryId, "status", null);
