@@ -8,7 +8,7 @@ import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects, Logger } from "@iko
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
-export abstract class CRUD<T, D extends mongoose.Document> {
+export abstract class CRUD<D extends mongoose.Document> {
   protected _model: mongoose.Model<D>;
   protected _logger: Logger;
   private _modelname: string;
@@ -30,7 +30,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    *
    * @param data
    */
-  public create(data: T): Promise<D> {
+  public create(data: any): Promise<D> {
     this._logger.debug("Creating new document", data);
     return this._model.create(<any>data);
   }
@@ -43,13 +43,13 @@ export abstract class CRUD<T, D extends mongoose.Document> {
   private _prepareQuery(queryId: string | any) {
     if (typeof queryId === "string" || mongoose.isValidObjectId(queryId)) {
       return { _id: queryId };
-    } else {
-      const status = Objects.get(queryId, "status", null);
-      if (status === null) {
-        queryId["status"] = { $gt: SERVER_STATUS.UNKNOWN };
-      }
-      return queryId;
     }
+
+    const status = Objects.get(queryId, "status", null);
+    if (status === null) {
+      queryId["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+    }
+    return queryId;
   }
 
   /**
@@ -60,7 +60,7 @@ export abstract class CRUD<T, D extends mongoose.Document> {
    * @param update
    * @param options
    */
-  public update(queryId: string | any, dataSet?: T, update?: any, options?: any): Promise<D> {
+  public update(queryId: string | any, dataSet?: any, update?: any, options?: any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
       const query = this._prepareQuery(queryId);
