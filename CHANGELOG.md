@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.1.11] - 2020-09-14
+- Adding ObjectId validation on CRUD query
+- Update base model to extends base Typegoose class and allow _id on class documents
+
 ## [1.1.10] - 2020-09-10
 - Update CRUD query parameter to handle id string or object query
 - Add options to update action inside CRUD
