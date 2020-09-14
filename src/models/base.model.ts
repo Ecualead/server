@@ -5,10 +5,10 @@
  * This file is part of the IKOA Business Opportunity Server API.
  */
 import { SERVER_STATUS } from "@ikoabo/core";
-import { prop } from "@typegoose/typegoose";
+import { prop, defaultClasses } from "@typegoose/typegoose";
 import mongoose from "mongoose";
 
-export class BaseModel {
+export class BaseModel extends defaultClasses.Base implements defaultClasses.TimeStamps {
   @prop({ required: true, default: SERVER_STATUS.ENABLED })
   status?: number;
 
