@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [1.1.13] - 2020-09-14
+- Set CRUD owner as ObjectId type
+
 ## [1.1.12] - 2020-09-14
 - Fix CRUD operations required _id field
 - Remove CRUD operations data type

@@ -13,7 +13,7 @@ export class BaseModel extends defaultClasses.Base implements defaultClasses.Tim
   status?: number;
 
   @prop({ type: mongoose.Types.ObjectId })
-  owner?: string;
+  owner?: mongoose.Types.ObjectId | string;
 
   @prop()
   createdAt?: Date;
