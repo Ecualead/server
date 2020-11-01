@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.1.14] - 2020-11-01
+- Force JOI validation to convert value types
+- Update project dependencies version
+
 ## [1.1.13] - 2020-09-14
 - Set CRUD owner as ObjectId type
 

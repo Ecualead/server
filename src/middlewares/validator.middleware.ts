@@ -71,7 +71,7 @@ export class Validator {
     return (req: Request, _res: Response, next: NextFunction) => {
       const reqTmp: any = req;
       try {
-        Joi.attempt(reqTmp[reqField], schema, { abortEarly: false });
+        Joi.attempt(reqTmp[reqField], schema, { abortEarly: false, convert: true });
       } catch (err) {
         next(Validator._handleErr(err));
         return;
