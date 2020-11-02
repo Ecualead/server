@@ -13,6 +13,7 @@ export { ErrorCtrl } from "./controllers/error.controller";
 
 /* Export models */
 export { BaseModel } from "./models/base.model";
+export { GeoJSON } from "./models/geojson.model";
 
 /* Export middlewares */
 export { ResponseHandler } from "./middlewares/response.middleware";
