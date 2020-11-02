@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [1.1.15] - 2020-11-02
+- Adding GeoJSON date model
+
 ## [1.1.14] - 2020-11-01
 - Force JOI validation to convert value types
 - Update project dependencies version
