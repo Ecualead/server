@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [1.1.16] - 2020-11-11
+- Adding conditional body request log
+- Adding conditional body response log
+- Add slave hook to dispatch actions before routes initialization
+
 ## [1.1.15] - 2020-11-02
 - Adding GeoJSON date model
 
