@@ -93,7 +93,7 @@ export class HttpServer {
    * @param worker  Cluster worker instance
    * @param routes  Initial Express routes
    */
-  public initExpress(worker?: any, routes?: any): Promise<void> {
+  public initExpress(worker?: any, preRoutes?: any, routes?: any): Promise<void> {
     return new Promise<void>((resolve) => {
       this._worker = worker;
       this._app = express();
@@ -153,20 +153,32 @@ export class HttpServer {
         this._app.use(logger("dev"));
         this._app.all("/*", (req: Request, res: Response, next: NextFunction) => {
           onFinished(res, (err: any, resp: any) => {
+            const request: any = {
+              method: req.method,
+              url: req.originalUrl,
+              headers: req.headers
+            };
+
+            const response: any = {
+              status: resp.statusCode,
+              message: resp.statusMessage
+            };
+
+            /* Check if request body musy be traced */
+            if (process.env.BODY_TRACE) {
+              request["body"] = req.body;
+            }
+
+            /* Check if the response body must be traced */
+            if (process.env.RESPONSE_TRACE) {
+              response["body"] = resp.locals;
+            }
+
             const requestTrace: any = {
               stamp: moment.utc().toDate().getTime(),
               err: err,
-              req: {
-                method: req.method,
-                url: req.originalUrl,
-                body: req.body,
-                headers: req.headers
-              },
-              res: {
-                status: resp.statusCode,
-                message: resp.statusMessage,
-                locals: resp.locals
-              },
+              req: request,
+              res: response,
               worker: this.worker
             };
             this._logger.debug(" Request trace", requestTrace);
@@ -190,6 +202,14 @@ export class HttpServer {
 
       /* Register default version route */
       this._app.use("/version", VersionRouter);
+
+      if (preRoutes) {
+        return preRoutes(this._app).finally(() => {
+          /* Register the Express routes */
+          this._registerRoutes(routes);
+          resolve();
+        });
+      }
 
       /* Register the Express routes */
       this._registerRoutes(routes);

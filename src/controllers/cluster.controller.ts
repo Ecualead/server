@@ -19,6 +19,7 @@ export interface ISlaveHooks {
   preMongo?: () => Promise<void>;
   postMongo?: () => Promise<void>;
   preExpress?: () => Promise<void>;
+  preRoutes?: (app: express.Application) => Promise<void>;
   postExpress?: (app: express.Application) => Promise<void>;
   running?: () => Promise<void>;
 }
@@ -236,7 +237,7 @@ export class ClusterServer {
   private _slaveExpress(server: HttpServer, routes?: any): Promise<void> {
     return new Promise<void>((resolve) => {
       /* Initialize Express */
-      server.initExpress(cluster.worker, routes).then(resolve);
+      server.initExpress(cluster.worker, this._slaveHooks.preRoutes, routes).then(resolve);
     });
   }
 
