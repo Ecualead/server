@@ -23,6 +23,8 @@ To run a microservice using `@ikoabo/server` there are some environment variable
 - `NODE_ENV`: NodeJS running environment, used to additional logger on request. Set to `production` to disable extended logger. Any other value is considered as `development`.
 - `INSTANCES`: Number of instances to run inside the cluster of process, by default `1` if the variable is omitted.
 - `LOG`: Components log level, it use the `Logger` wrapper off `@ikoabo/core`. By default `error` if the variable is omitted.
+- `BODY_TRACE`: Set if the request body must be debbuged in development mode.
+- `RESPONSE_TRACE`: Set if the response body must be debbuged in development mode.
 
 ### Database environment variables
 
