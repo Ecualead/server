@@ -8,10 +8,15 @@ import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects, Logger } from "@iko
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
+export interface ICRUDOptions {
+  modelName?: string;
+  preventStatusQuery?: boolean;
+}
+
 export abstract class CRUD<D extends mongoose.Document> {
   protected _model: mongoose.Model<D>;
   protected _logger: Logger;
-  private _modelname: string;
+  private _opts: ICRUDOptions;
 
   /**
    *
@@ -19,10 +24,13 @@ export abstract class CRUD<D extends mongoose.Document> {
    * @param model
    * @param modelname
    */
-  constructor(logger: string, model: mongoose.Model<D>, modelname?: string) {
+  constructor(logger: string, model: mongoose.Model<D>, opts?: ICRUDOptions) {
     this._logger = new Logger(logger);
     this._model = model;
-    this._modelname = modelname || "";
+    this._opts = opts || {
+      modelName: model.name,
+      preventStatusQuery: false
+    };
   }
 
   /**
@@ -30,9 +38,8 @@ export abstract class CRUD<D extends mongoose.Document> {
    *
    * @param data
    */
-  public create(data: any): Promise<D> {
-    this._logger.debug("Creating new document", data);
-    return this._model.create(<any>data);
+  public create(data: any | any[]): Promise<D> {
+    return this._model.create(data);
   }
 
   /**
@@ -45,9 +52,12 @@ export abstract class CRUD<D extends mongoose.Document> {
       return { _id: queryId };
     }
 
-    const status = Objects.get(queryId, "status", null);
-    if (status === null) {
-      queryId["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+    /* Check for status query prevent */
+    if (!this._opts.preventStatusQuery) {
+      const status = Objects.get(queryId, "status", null);
+      if (status === null) {
+        queryId["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+      }
     }
     return queryId;
   }
@@ -63,7 +73,7 @@ export abstract class CRUD<D extends mongoose.Document> {
   public update(queryId: string | any, dataSet?: any, update?: any, options?: any): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
-      const query = this._prepareQuery(queryId);
+      const query: any = this._prepareQuery(queryId);
 
       /* Ensure update variable is valid */
       if (!update) {
@@ -109,7 +119,14 @@ export abstract class CRUD<D extends mongoose.Document> {
    * @param options
    * @param populate
    */
-  public fetch(queryId: string | any, options?: any, populate?: string[]): Promise<D> {
+  public fetch(
+    queryId: string | any,
+    options?: any,
+    populate?: string[],
+    sort?: any,
+    skip?: number,
+    limit?: number
+  ): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
       const query = this._prepareQuery(queryId);
@@ -122,6 +139,21 @@ export abstract class CRUD<D extends mongoose.Document> {
         populate.forEach((value: string) => {
           baseQuery = baseQuery.populate(value);
         });
+      }
+
+      /* Check for entries sort */
+      if (sort) {
+        baseQuery.sort(sort);
+      }
+
+      /* Check for entries skip */
+      if (skip) {
+        baseQuery = baseQuery.skip(skip);
+      }
+
+      /* Check for entries limit */
+      if (limit) {
+        baseQuery = baseQuery.limit(limit);
       }
 
       /* Execute the query */
@@ -147,7 +179,14 @@ export abstract class CRUD<D extends mongoose.Document> {
    * @param options
    * @param populate
    */
-  public fetchAll(queryId: any, options?: any, populate?: string[]): mongoose.QueryCursor<D> {
+  public fetchAll(
+    queryId: any,
+    options?: any,
+    populate?: string[],
+    sort?: any,
+    skip?: number,
+    limit?: number
+  ): mongoose.QueryCursor<D> {
     /* Prepare the query object */
     const query = this._prepareQuery(queryId);
 
@@ -159,6 +198,21 @@ export abstract class CRUD<D extends mongoose.Document> {
       populate.forEach((value: string) => {
         baseQuery = baseQuery.populate(value);
       });
+    }
+
+    /* Check for entries sort */
+    if (sort) {
+      baseQuery.sort(sort);
+    }
+
+    /* Check for entries skip */
+    if (skip) {
+      baseQuery = baseQuery.skip(skip);
+    }
+
+    /* Check for entries limit */
+    if (limit) {
+      baseQuery = baseQuery.limit(limit);
     }
 
     /* Return cursor query */
@@ -175,7 +229,10 @@ export abstract class CRUD<D extends mongoose.Document> {
   public fetchRaw(
     queryId: any,
     options?: any,
-    populate?: string[]
+    populate?: string[],
+    sort?: any,
+    skip?: number,
+    limit?: number
   ): mongoose.DocumentQuery<D[], D> {
     /* Prepare the query object */
     const query = this._prepareQuery(queryId);
@@ -188,6 +245,21 @@ export abstract class CRUD<D extends mongoose.Document> {
       populate.forEach((value: string) => {
         baseQuery = baseQuery.populate(value);
       });
+    }
+
+    /* Check for entries sort */
+    if (sort) {
+      baseQuery.sort(sort);
+    }
+
+    /* Check for entries skip */
+    if (skip) {
+      baseQuery = baseQuery.skip(skip);
+    }
+
+    /* Check for entries limit */
+    if (limit) {
+      baseQuery = baseQuery.limit(limit);
     }
 
     /* Return query */
@@ -276,7 +348,7 @@ export abstract class CRUD<D extends mongoose.Document> {
           }
 
           /* Store the object information to be used into the next middleware */
-          res.locals[this._modelname] = value;
+          res.locals[this._opts.modelName] = value;
           next();
         })
         .catch(next);
