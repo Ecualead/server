@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.1.18] - 2020-12-26
+- Moving @ikoabo/core as peer dependency
+- Updating project dependencies
+
 ## [1.1.17] - 2020-12-03
 - Adding support for skip and limit
 - Adding support for data sort
