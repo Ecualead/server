@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [1.1.18] - 2020-12-26
+- Moving @ikoabo/core as peer dependency
+- Updating project dependencies
+
+## [1.1.17] - 2020-12-03
+- Adding support for skip and limit
+- Adding support for data sort
+- Change CRUD base options
+- Handle conditional query status field
+
 ## [1.1.16] - 2020-11-11
 - Adding conditional body request log
 - Adding conditional body response log
