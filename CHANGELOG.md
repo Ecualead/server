@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [1.1.19] - 2021-04-21
+- Updating project dependencies
+
 ## [1.1.18] - 2020-12-26
 - Moving @ikoabo/core as peer dependency
 - Updating project dependencies

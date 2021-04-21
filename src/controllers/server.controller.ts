@@ -1,8 +1,12 @@
 /**
- * Copyright (C) 2020 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ *
+ * All Rights Reserved
  * Author: Reinier Millo Sánchez <millo@ikoabo.com>
  *
- * This file is part of the IKOA Business Opportunity Server API.
+ * This file is part of the IKOA Business Oportunity Server Package
+ * It can't be copied and/or distributed without the express
+ * permission of the author.
  */
 import { Server, createServer } from "http";
 import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
@@ -53,8 +57,8 @@ export class HttpServer {
   /**
    * Initialize the MongoDB connection
    */
-  public initMongo(): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
+  public initMongo(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
       /* Check if mongodb uri is set or not */
       if (!process.env.MONGODB_URI) {
         this._logger.warn("No database configuration found. Skip database connection.", {
