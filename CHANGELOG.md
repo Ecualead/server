@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [1.1.20] - 2021-04-25
+- Fix express middlewares response
+
 ## [1.1.19] - 2021-04-21
 - Updating project dependencies
 
