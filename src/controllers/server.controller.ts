@@ -19,7 +19,7 @@ import mongoose from "mongoose";
 import logger from "morgan";
 import onFinished from "on-finished";
 import VersionRouter from "../middlewares/version.middleware";
-import { ResponseHandler } from "src/middlewares/response.middleware";
+import { ResponseHandler } from "../middlewares/response.middleware";
 
 /**
  * Standar Express Http Server handler
