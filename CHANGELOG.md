@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [1.1.21] - 2021-04-25
+- Fix middlewares import
+
 ## [1.1.20] - 2021-04-25
 - Fix express middlewares response
 
