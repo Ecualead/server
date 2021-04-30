@@ -95,6 +95,7 @@ interface ISlaveHooks {
   preMongo?: () => Promise<void>;
   postMongo?: () => Promise<void>;
   preExpress?: () => Promise<void>;
+  preRoutes?: (app: express.Application) => Promise<void>;
   postExpress?: (app: express.Application) => Promise<void>;
   running?: () => Promise<void>;
 }
@@ -241,6 +242,8 @@ router.get(
 export default router;
 ```
 
+Using default server schema don't need to use the `ResponseHandler` middlewares. There are added to `express` by default to handle all responses globally.
+
 ### Data validation
 
 To allow data validation the package includes a middleware to validate any request data. Data validation is done using Joi schemas. The server package exports a custom instance of Joi with objectId validation.
@@ -271,8 +274,6 @@ router.post(
     };
     next();
   },
-  ResponseHandler.success,
-  ResponseHandler.error
 );
 
 export default router;
@@ -352,9 +353,9 @@ The data controller can be implemented extending the `CRUD` class:
 
 ```js
 import { CRUD } from "@ikoabo/core_srv";
-import { MuModel, MyModelDocument, MyModelModel } from "@/models/events.model";
+import { MyModelDocument, MyModelModel } from "@/models/events.model";
 
-class MyModelCtrl extends CRUD<MyModel, MyModelDocument>{
+class MyModelCtrl extends CRUD<MyModelDocument>{
   private static _instance: MyModelCtrl;
 
   private constructor() {
@@ -387,3 +388,31 @@ abstract class CRUD<T, D extends mongoose.Document> {
   public validate(path: string, owner?: string);
 }
 ```
+
+By default `CRUD` perform all queries with condition `status > 0`. If you don't handle the status field at object creation or the field is not needed, you can prevent use this fields in queries setting the options at the `CRUD` constructor:
+
+```js
+import { CRUD } from "@ikoabo/core_srv";
+import { MyModelDocument, MyModelModel } from "@/models/events.model";
+
+class MyModelCtrl extends CRUD<MyModelDocument>{
+  private static _instance: MyModelCtrl;
+
+  private constructor() {
+    super('MyModel Controller', MyModelModel, {
+      /* Optional value, by default extract name from model class */
+      modelName: "My model name",
+
+      /* By default is set to false */
+      preventStatusQuery: true,
+    });
+  }
+
+  public static get shared(): MyModelCtrl {
+    if (!MyModelCtrl._instance) {
+      MyModelCtrl._instance = new MyModelCtrl();
+    }
+    return MyModelCtrl._instance;
+  }
+}
+``
