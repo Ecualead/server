@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.1.22] - 2021-04-30
+- Add response handler success/error ad global middlewares
+- Update package documentation
+
 ## [1.1.21] - 2021-04-25
 - Fix middlewares import
 
