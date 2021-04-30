@@ -247,6 +247,22 @@ export class HttpServer {
    * Start listening on the HTTP server
    */
   public listen(port?: number): Promise<Server> {
+    /* Other routes give 404 error */
+    this._app.use(function (_req, res, next) {
+      if (!res.locals["response"]) {
+        return next({
+          boError: SERVER_ERRORS.INVALID_OPERATION,
+          boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
+        });
+        res;
+      }
+      next();
+    });
+
+    /* Register response handlers */
+    this._app.use(ResponseHandler.success);
+    this._app.use(ResponseHandler.error);
+
     return new Promise<Server>((resolve) => {
       const server: Server = this._http.listen(
         port === null ? this._app.get("port") : port,
@@ -287,17 +303,5 @@ export class HttpServer {
         }
       });
     }
-
-    /* Register response handlers */
-    this._app.all("*", ResponseHandler.success);
-    this._app.all("*", ResponseHandler.error);
-
-    /* Other routes give 404 error */
-    this._app.use(function (_req, res, _next) {
-      res
-        .status(HTTP_STATUS.HTTP_4XX_NOT_FOUND)
-        .json({ error: SERVER_ERRORS.INVALID_OPERATION })
-        .end();
-    });
   }
 }
