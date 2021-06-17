@@ -44,7 +44,8 @@ class Errors {
     const error: any = {
       status: err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_4XX_BAD_REQUEST,
       response: {
-        error: err.boError ? err.boError : SERVER_ERRORS.UNKNOW_ERROR
+        error: err.boError || SERVER_ERRORS.UNKNOW_ERROR,
+        description: err.boStr || "no-description"
       }
     };
     if (err.boData) {
@@ -56,10 +57,12 @@ class Errors {
       switch (err.code) {
         case 11000 /* Duplicated key error */:
           error.response.error = SERVER_ERRORS.OBJECT_DUPLICATED;
+          error.response.description = "object-duplicated";
           error.status = HTTP_STATUS.HTTP_4XX_CONFLICT;
           break;
         default:
           error.response.error = SERVER_ERRORS.INVALID_OPERATION;
+          error.response.description = "invalid-operation";
           error.status = HTTP_STATUS.HTTP_4XX_BAD_REQUEST;
       }
     } else {
@@ -68,17 +71,19 @@ class Errors {
         switch (err.code) {
           case 401:
             error.response.error = SERVER_ERRORS.INVALID_OPERATION;
+            error.response.description = "invalid-operation";
             error.status = HTTP_STATUS.HTTP_4XX_UNAUTHORIZED;
             break;
 
           default:
             error.response.error = SERVER_ERRORS.INVALID_OPERATION;
+            error.response.description = "invalid-operation";
             error.status = err.status || HTTP_STATUS.HTTP_4XX_FORBIDDEN;
         }
       }
     }
 
-    this._logger.error("Request error", { error: err.stack, response: error });
+    this._logger.error("Request error", { error: err, stack: err.stack, response: error });
     return error;
   }
 }

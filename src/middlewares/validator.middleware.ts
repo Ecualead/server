@@ -61,6 +61,7 @@ export class Validator {
     return {
       boStatus: HTTP_STATUS.HTTP_4XX_NOT_ACCEPTABLE,
       boError: SERVER_ERRORS.INVALID_FIELDS,
+      boStr: "invalid-fields",
       boData: { fields: fields }
     };
   }
