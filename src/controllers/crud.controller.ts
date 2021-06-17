@@ -42,7 +42,7 @@ export abstract class CRUD<D extends mongoose.Document> {
    *
    * @param data
    */
-  public create(data: any | any[]): Promise<D> {
+  public create(data: any | any[]): Promise<D | D[]> {
     return this._model.create(data);
   }
 
@@ -106,6 +106,7 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -166,6 +167,7 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -286,6 +288,7 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -314,6 +317,7 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -330,23 +334,37 @@ export abstract class CRUD<D extends mongoose.Document> {
    * @param path Path to get ObjectID from request
    * @param owner User owner ObjectID
    */
-  public validate(path: string, owner?: string) {
+  public isValidOwner(path: string, owner?: string) {
     return (req: Request, res: Response, next: NextFunction) => {
-      const ownerStr = owner ? Objects.get(res, owner, null) : null;
-      this.fetch(Objects.get(req, path, ""))
+      const objId = Objects.get(req, path, null);
+      const ownerId = owner ? Objects.get(res, owner, null) : null;
+
+      /* Check for valid obj id */
+      if (!objId) {
+        return next({
+          boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+          boStr: "object-not-found",
+          boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
+        });
+      }
+
+      /* Look for the target object */
+      this.fetch(objId)
         .then((value: any) => {
           /* Check if the given module is valid */
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
             return next({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
+              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
           }
 
           /* Check the object owner if its necessary */
-          if (ownerStr && value.owner.toString() !== ownerStr) {
+          if (ownerId && value.owner.toString() !== ownerId) {
             return next({
               boError: SERVER_ERRORS.INVALID_OWNER,
+              boStr: "invalid-owner",
               boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN
             });
           }
@@ -357,5 +375,106 @@ export abstract class CRUD<D extends mongoose.Document> {
         })
         .catch(next);
     };
+  }
+
+  /**
+   * Set the document object as enabled
+   *
+   * @param id
+   * @returns
+   */
+  public enable(id: string): Promise<D> {
+    const query: any = { _id: id, status: SERVER_STATUS.DISABLED };
+    return this._updateStatus(query, SERVER_STATUS.ENABLED);
+  }
+
+  /**
+   * Set the document object as disabled
+   *
+   * @param id
+   * @returns
+   */
+  public disable(id: string): Promise<D> {
+    const query: any = { _id: id, status: SERVER_STATUS.ENABLED };
+    return this._updateStatus(query, SERVER_STATUS.DISABLED);
+  }
+
+  /**
+   * Execute a database operation over a filed with the given value
+   *
+   * @param op
+   * @param id
+   * @param field
+   * @param value
+   * @returns
+   */
+  private _fieldOp(op: string, id: string, field: string, value: any): Promise<D> {
+    const query: any = { _id: id, status: { $gt: SERVER_STATUS.UNKNOWN } };
+    const obj: any = {};
+    obj[`${field}`] = value;
+    const update: any = {};
+    update[`${op}`] = obj;
+
+    return this.update(query, {}, update);
+  }
+
+  /**
+   * Execute addToSet op over field
+   *
+   * @param id
+   * @param field
+   * @param value
+   * @returns
+   */
+  public addToSet(id: string, field: string, value: any): Promise<D> {
+    return this._fieldOp("$addToSet", id, field, value);
+  }
+
+  /**
+   * Execute push op over field
+   *
+   * @param id
+   * @param field
+   * @param value
+   * @returns
+   */
+  public push(id: string, field: string, value: any): Promise<D> {
+    return this._fieldOp("$push", id, field, value);
+  }
+
+  /**
+   * Execute pushAll op over field
+   *
+   * @param id
+   * @param field
+   * @param value
+   * @returns
+   */
+  public pushAll(id: string, field: string, value: any): Promise<D> {
+    return this._fieldOp("$pushAll", id, field, value);
+  }
+
+  /**
+   * Execute pull op over field
+   *
+   * @param id
+   * @param field
+   * @param value
+   * @returns
+   */
+  public pull(id: string, field: string, value: any): Promise<D> {
+    return this._fieldOp("$pull", id, field, value);
+  }
+
+  /**
+   * Execute pullAll op over field
+   *
+   * @param id
+   * @param field
+   * @param value
+   * @returns
+   */
+  public pullAll(id: string, field: string, value: any): Promise<D> {
+    return this._fieldOp("$pullAll", id, field, value);
   }
 }
