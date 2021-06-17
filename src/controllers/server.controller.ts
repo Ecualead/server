@@ -69,26 +69,23 @@ export class HttpServer {
       }
 
       /* Connect to the MongoDB server */
-      mongoose.set("useFindAndModify", false);
-      mongoose.set("useCreateIndex", process.env.MONGODB_NOT_USE_CREATE_INDEX !== "true");
       mongoose
         .connect(process.env.MONGODB_URI, {
-          useNewUrlParser: process.env.MONGODB_NOT_USE_NEW_URL_PARSER !== "true",
-          useCreateIndex: process.env.MONGODB_NOT_USE_CREATE_INDEX !== "true",
-          autoIndex: process.env.MONGODB_NOT_AUTO_INDEX !== "true",
+          useFindAndModify: !!process.env.MONGODB_NOT_USE_NEW_URL_PARSER,
+          useNewUrlParser: !process.env.MONGODB_NOT_USE_NEW_URL_PARSER,
+          useCreateIndex: !process.env.MONGODB_NOT_USE_CREATE_INDEX,
+          autoIndex: !process.env.MONGODB_NOT_AUTO_INDEX,
           poolSize: parseInt(process.env.MONGODB_POOL_SIZE || "10"),
-          useUnifiedTopology: process.env.MONGODB_NOT_USE_UNIFIED_TOPOLOGY !== "true"
+          useUnifiedTopology: !process.env.MONGODB_NOT_USE_UNIFIED_TOPOLOGY
         })
         .then(() => {
           this._logger.info("Connected to MongoDB", { worker: this.worker });
           resolve();
+        })
+        .catch((err: any) => {
+          this._logger.error("MongoDB cannot establish the connection", err);
+          reject(err);
         });
-
-      /* Listen for MongoDB error connection */
-      mongoose.connection.on("error", (err: any) => {
-        this._logger.error("MongoDB cannot establish the connection", err);
-        reject(err);
-      });
     });
   }
 
@@ -132,18 +129,22 @@ export class HttpServer {
       /**
        * Security mechanism
        */
-      this._app.use(Helmet.xssFilter());
       this._app.disable("x-powered-by");
-      this._app.use(Helmet.hidePoweredBy());
+      this._app.use(Helmet.contentSecurityPolicy());
+      this._app.use(Helmet.dnsPrefetchControl());
+      this._app.use(Helmet.expectCt());
       this._app.use(Helmet.frameguard({ action: "deny" }));
-      this._app.use(Helmet.noSniff());
-      this._app.use(Helmet.referrerPolicy());
-      this._app.use(Helmet.ieNoOpen());
+      this._app.use(Helmet.hidePoweredBy());
       this._app.use(
         Helmet.hsts({
           maxAge: 5184000
         })
       );
+      this._app.use(Helmet.ieNoOpen());
+      this._app.use(Helmet.noSniff());
+      this._app.use(Helmet.permittedCrossDomainPolicies());
+      this._app.use(Helmet.referrerPolicy());
+      this._app.use(Helmet.xssFilter());
 
       /* Set trust proxy */
       this._app.set("trust proxy", process.env.HTTP_NOT_TRUST_PROXY !== "true");
@@ -230,20 +231,6 @@ export class HttpServer {
   }
 
   /**
-   * Add new middleware to the Express application
-   *
-   * @param middleware  Express middleware to be registered
-   * @param route  Router or array of routers to handle the given middleware
-   */
-  public use(middleware: any, route?: any) {
-    if (!route) {
-      this._app.use(middleware);
-    } else {
-      this._app.use(middleware, route);
-    }
-  }
-
-  /**
    * Start listening on the HTTP server
    */
   public listen(port?: number): Promise<Server> {
@@ -254,7 +241,6 @@ export class HttpServer {
           boError: SERVER_ERRORS.INVALID_OPERATION,
           boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
         });
-        res;
       }
       next();
     });
@@ -296,10 +282,10 @@ export class HttpServer {
         /* Check if the route is an array of routers or not */
         if (Array.isArray(routes[key])) {
           routes[key].forEach((value: any) => {
-            this.use(key, value);
+            this.app.use(key, value);
           });
         } else {
-          this.use(key, routes[key]);
+          this.app.use(key, routes[key]);
         }
       });
     }
