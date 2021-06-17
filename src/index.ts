@@ -9,6 +9,11 @@
  * permission of the author.
  */
 
+import { setGlobalOptions, Severity } from "@typegoose/typegoose";
+
+/* Allow to use Mixed types */
+setGlobalOptions({ options: { allowMixed: Severity.ALLOW } });
+
 /* Export api controllers */
 export { ClusterServer, IMasterHooks, ISlaveHooks } from "./controllers/cluster.controller";
 export { HttpServer } from "./controllers/server.controller";
