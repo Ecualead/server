@@ -10,14 +10,22 @@
  */
 import { SERVER_STATUS } from "@ikoabo/core";
 import { prop, defaultClasses } from "@typegoose/typegoose";
-import mongoose from "mongoose";
+import { Types } from "mongoose";
 
-export class BaseModel extends defaultClasses.Base implements defaultClasses.TimeStamps {
+/**
+ * Base data model definition
+ *
+ * Common used data fields on CRUDs models
+ */
+export class BaseModel
+  extends defaultClasses.Base<Types.ObjectId>
+  implements defaultClasses.TimeStamps
+{
   @prop({ required: true, default: SERVER_STATUS.ENABLED })
   status?: number;
 
-  @prop({ type: mongoose.Types.ObjectId })
-  owner?: mongoose.Types.ObjectId | string;
+  @prop({ type: Types.ObjectId })
+  owner?: Types.ObjectId | string;
 
   @prop()
   createdAt?: Date;
@@ -25,6 +33,6 @@ export class BaseModel extends defaultClasses.Base implements defaultClasses.Tim
   @prop()
   updatedAt?: Date;
 
-  @prop({ type: mongoose.Types.ObjectId })
-  modifiedBy?: string;
+  @prop({ type: Types.ObjectId })
+  modifiedBy?: Types.ObjectId | string;
 }

@@ -10,6 +10,9 @@
  */
 import { prop } from "@typegoose/typegoose";
 
+/**
+ * GeoJSON data definition
+ */
 export class GeoJSON {
   @prop({
     required: true,
