@@ -44,8 +44,8 @@ class Errors {
     const error: any = {
       status: err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_4XX_BAD_REQUEST,
       response: {
-        error: err.boError || SERVER_ERRORS.UNKNOW_ERROR,
-        description: err.boStr || "no-description"
+        error: err.boError.value || SERVER_ERRORS.UNKNOWN_ERROR.value,
+        description: err.boError.str || SERVER_ERRORS.UNKNOWN_ERROR.str
       }
     };
     if (err.boData) {
@@ -56,13 +56,13 @@ class Errors {
     if (err.name === "MongoError") {
       switch (err.code) {
         case 11000 /* Duplicated key error */:
-          error.response.error = SERVER_ERRORS.OBJECT_DUPLICATED;
-          error.response.description = "object-duplicated";
+          error.response.error = SERVER_ERRORS.OBJECT_DUPLICATED.value;
+          error.response.description = SERVER_ERRORS.OBJECT_DUPLICATED.str;
           error.status = HTTP_STATUS.HTTP_4XX_CONFLICT;
           break;
         default:
-          error.response.error = SERVER_ERRORS.INVALID_OPERATION;
-          error.response.description = "invalid-operation";
+          error.response.error = SERVER_ERRORS.INVALID_OPERATION.value;
+          error.response.description = SERVER_ERRORS.INVALID_OPERATION.str;
           error.status = HTTP_STATUS.HTTP_4XX_BAD_REQUEST;
       }
     } else {
@@ -70,14 +70,14 @@ class Errors {
       if (err.code) {
         switch (err.code) {
           case 401:
-            error.response.error = SERVER_ERRORS.INVALID_OPERATION;
-            error.response.description = "invalid-operation";
+            error.response.error = SERVER_ERRORS.INVALID_OPERATION.value;
+            error.response.description = SERVER_ERRORS.INVALID_OPERATION.str;
             error.status = HTTP_STATUS.HTTP_4XX_UNAUTHORIZED;
             break;
 
           default:
-            error.response.error = SERVER_ERRORS.INVALID_OPERATION;
-            error.response.description = "invalid-operation";
+            error.response.error = SERVER_ERRORS.INVALID_OPERATION.value;
+            error.response.description = SERVER_ERRORS.INVALID_OPERATION.str;
             error.status = err.status || HTTP_STATUS.HTTP_4XX_FORBIDDEN;
         }
       }

@@ -239,7 +239,6 @@ export class HttpServer {
       if (!res.locals["response"]) {
         return next({
           boError: SERVER_ERRORS.INVALID_OPERATION,
-          boStr: "invalid-operation",
           boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
         });
       }
