@@ -2,6 +2,10 @@
 
 ## [1.1.24] - 2021-06-09
 
+- Update error handler schema
+
+## [1.1.24] - 2021-06-09
+
 - Back to mongoose 5.10.x and Typegoose 7.x
 - Allow Typegoose to user `any`as field types
 - Add on fields MongoDB ops to base CRUD
