@@ -106,7 +106,6 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -167,7 +166,6 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -288,7 +286,6 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -317,7 +314,6 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
             return;
@@ -343,7 +339,6 @@ export abstract class CRUD<D extends mongoose.Document> {
       if (!objId) {
         return next({
           boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-          boStr: "object-not-found",
           boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
         });
       }
@@ -355,7 +350,6 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
             return next({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStr: "object-not-found",
               boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
             });
           }
@@ -364,7 +358,6 @@ export abstract class CRUD<D extends mongoose.Document> {
           if (ownerId && value.owner.toString() !== ownerId) {
             return next({
               boError: SERVER_ERRORS.INVALID_OWNER,
-              boStr: "invalid-owner",
               boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN
             });
           }
