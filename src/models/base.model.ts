@@ -10,7 +10,7 @@
  */
 import { prop, defaultClasses } from "@typegoose/typegoose";
 import { Types } from "mongoose";
-import { SERVER_STATUS } from "src/constants/status.enum";
+import { SERVER_STATUS } from "../constants/status.enum";
 
 interface IBaseModel extends defaultClasses.Base<Types.ObjectId>, defaultClasses.TimeStamps {}
 
