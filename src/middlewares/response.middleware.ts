@@ -8,12 +8,14 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { HTTP_STATUS } from "@ikoabo/core";
 import { Request, Response, NextFunction } from "express";
+import { SERVER_ERRORS } from "../constants/errors.enum";
+import { Objects } from "../utils/objects.util";
+import { HTTP_STATUS } from "../constants/http.status.enum";
 import { ErrorCtrl } from "../controllers/error.controller";
 
 /**
- * Base middlewares to handle express responses
+ * Base middleware to handle express responses
  */
 export class ResponseHandler {
   /**
@@ -51,6 +53,19 @@ export class ResponseHandler {
    */
   public static error(err: any, _req: Request, res: Response, _next: NextFunction) {
     const errObj = ErrorCtrl.parseError(err);
-    res.status(errObj.status).json(errObj.response).end();
+
+    /* Prepare error response */
+    const status = Objects.get(errObj, "boStatus", Objects.get(errObj, "boError.status", HTTP_STATUS.HTTP_4XX_BAD_REQUEST));
+    const response: any = {
+      error: Objects.get(errObj, "boError.value", SERVER_ERRORS.UNKNOWN_ERROR.value),
+      description: Objects.get(errObj, "boError.str", SERVER_ERRORS.UNKNOWN_ERROR.str)
+    };
+
+    /* Check to set error data */
+    if (errObj.boData) {
+      response["data"] = errObj.boData;
+    }
+
+    res.status(status).json(response).end();
   }
 }

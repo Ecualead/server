@@ -9,9 +9,10 @@
  * permission of the author.
  */
 import JoiBase from "joi";
-import { SERVER_ERRORS, HTTP_STATUS } from "@ikoabo/core";
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
+import { HTTP_STATUS } from "../constants/http.status.enum";
+import { SERVER_ERRORS } from "../constants/errors.enum";
 
 /**
  * Custom JOI validator to validate ObjectId

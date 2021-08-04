@@ -9,7 +9,6 @@
  * permission of the author.
  */
 import { Server, createServer } from "http";
-import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
 import cors from "cors";
 import express, { Request, Response, NextFunction } from "express";
 import Helmet from "helmet";
@@ -20,6 +19,9 @@ import logger from "morgan";
 import onFinished from "on-finished";
 import VersionRouter from "../middlewares/version.middleware";
 import { ResponseHandler } from "../middlewares/response.middleware";
+import { Logger } from "./logger.controller";
+import { SERVER_ERRORS } from "../constants/errors.enum";
+import { HTTP_STATUS } from "../constants/http.status.enum";
 
 /**
  * Standar Express Http Server handler

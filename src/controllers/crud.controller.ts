@@ -8,9 +8,13 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { SERVER_ERRORS, SERVER_STATUS, HTTP_STATUS, Objects, Logger } from "@ikoabo/core";
 import { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
+import mongoose, { EnforceDocument } from "mongoose";
+import { SERVER_ERRORS } from "../constants/errors.enum";
+import { HTTP_STATUS } from "../constants/http.status.enum";
+import { SERVER_STATUS } from "../constants/status.enum";
+import { Objects } from "../utils/objects.util";
+import { Logger } from "./logger.controller";
 
 export interface ICRUDOptions {
   modelName?: string;
@@ -24,7 +28,7 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    *
-   * @param logger
+   * @param loggers
    * @param model
    * @param modelname
    */
@@ -99,10 +103,15 @@ export abstract class CRUD<D extends mongoose.Document> {
         options["new"] = true;
       }
 
+      /* Check to disable raw result */
+      if (Objects.get(options, "rawResult", null) === null) {
+        options["rawResult"] = false;
+      }
+
       /* Find and update one document */
       this._model
         .findOneAndUpdate(query, update, options)
-        .then((value: D) => {
+        .then((value: any) => {
           if (!value) {
             reject({
               boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
@@ -110,7 +119,7 @@ export abstract class CRUD<D extends mongoose.Document> {
             });
             return;
           }
-          resolve(value);
+          resolve(value as D);
         })
         .catch(reject);
     });
@@ -237,7 +246,7 @@ export abstract class CRUD<D extends mongoose.Document> {
     sort?: any,
     skip?: number,
     limit?: number
-  ): mongoose.DocumentQuery<D[], D> {
+  ): mongoose.Query<EnforceDocument<D, {}>[], EnforceDocument<D, {}>, {}, D> {
     /* Prepare the query object */
     const query = this._prepareQuery(queryId);
 

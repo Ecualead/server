@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [2.0.0] - 2021-08-03
+- Update error handler
+- Moving core components to server package
+- Update to typegoose 8.x and mongoose 5.13.x
+
 ## [1.1.24] - 2021-06-09
 
 - Update error handler schema

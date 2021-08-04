@@ -8,7 +8,21 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
+import { SERVER_ERRORS } from "../constants/errors.enum";
+import { HTTP_STATUS } from "../constants/http.status.enum";
+import { Logger } from "./logger.controller";
+
+export interface IErrorResponse {
+  boError: IError;
+  boStatus?: HTTP_STATUS;
+  boData?: any;
+}
+
+export interface IError {
+  value: number;
+  str?: string;
+  status?: HTTP_STATUS;
+}
 
 /**
  * Errors controller
@@ -40,51 +54,34 @@ class Errors {
    *
    * @param err
    */
-  parseError(err: any) {
-    const error: any = {
-      status: err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_4XX_BAD_REQUEST,
-      response: {
-        error: err.boError.value || SERVER_ERRORS.UNKNOWN_ERROR.value,
-        description: err.boError.str || SERVER_ERRORS.UNKNOWN_ERROR.str
-      }
-    };
-    if (err.boData) {
-      error.response["data"] = err.boData;
+  parseError(err: any): IErrorResponse {
+    this._logger.error("Request error", { error: err, stack: err.stack });
+
+    /* Bypass formatted error */
+    if (err.boError) {
+      return {
+        boError: err.boError,
+        boStatus: err.boStatus,
+        boData: err.boData,
+      };
     }
 
     /* Check for MongoDB errors */
     if (err.name === "MongoError") {
       switch (err.code) {
         case 11000 /* Duplicated key error */:
-          error.response.error = SERVER_ERRORS.OBJECT_DUPLICATED.value;
-          error.response.description = SERVER_ERRORS.OBJECT_DUPLICATED.str;
-          error.status = HTTP_STATUS.HTTP_4XX_CONFLICT;
-          break;
+          return { boError: SERVER_ERRORS.OBJECT_DUPLICATED };
         default:
-          error.response.error = SERVER_ERRORS.INVALID_OPERATION.value;
-          error.response.description = SERVER_ERRORS.INVALID_OPERATION.str;
-          error.status = HTTP_STATUS.HTTP_4XX_BAD_REQUEST;
-      }
-    } else {
-      /* Check OAuth2 errors */
-      if (err.code) {
-        switch (err.code) {
-          case 401:
-            error.response.error = SERVER_ERRORS.INVALID_OPERATION.value;
-            error.response.description = SERVER_ERRORS.INVALID_OPERATION.str;
-            error.status = HTTP_STATUS.HTTP_4XX_UNAUTHORIZED;
-            break;
-
-          default:
-            error.response.error = SERVER_ERRORS.INVALID_OPERATION.value;
-            error.response.description = SERVER_ERRORS.INVALID_OPERATION.str;
-            error.status = err.status || HTTP_STATUS.HTTP_4XX_FORBIDDEN;
-        }
+          return { boError: SERVER_ERRORS.INVALID_OPERATION };
       }
     }
 
-    this._logger.error("Request error", { error: err, stack: err.stack, response: error });
-    return error;
+    /* Check OAuth2 errors */
+    if (err.code === 401) {
+      return { boError: SERVER_ERRORS.INVALID_OPERATION, boStatus: HTTP_STATUS.HTTP_4XX_UNAUTHORIZED };
+    }
+
+    return { boError: SERVER_ERRORS.INVALID_OPERATION, boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN };
   }
 }
 

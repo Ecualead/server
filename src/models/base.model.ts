@@ -8,19 +8,21 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { SERVER_STATUS } from "@ikoabo/core";
 import { prop, defaultClasses } from "@typegoose/typegoose";
 import { Types } from "mongoose";
+import { SERVER_STATUS } from "../constants/status.enum";
+
+interface IBaseModel extends defaultClasses.Base<Types.ObjectId>, defaultClasses.TimeStamps {}
 
 /**
  * Base data model definition
  *
  * Common used data fields on CRUDs models
  */
-export class BaseModel
-  extends defaultClasses.Base<Types.ObjectId>
-  implements defaultClasses.TimeStamps
-{
+export class BaseModel implements IBaseModel {
+  _id: Types.ObjectId;
+  id: string;
+
   @prop({ required: true, default: SERVER_STATUS.ENABLED })
   status?: number;
 
