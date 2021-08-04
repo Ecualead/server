@@ -42,7 +42,7 @@ To run a microservice using `@ikoabo/server` there are some environment variable
 - `HTT_NOT_CORS`: If it's `true` prevent Express allowing CORS access. Any value different of `true` is considered as false. In this service implementation CORS is allowed for all origins. If you need a more specific configuration, then global CORS must be disabled and enabled manually in the required points.
 - `HTTP_NOT_TRUST_PROXY`: If it's `true` prevent Express set the `trust proxy` configuration. Any value different of `true` is considered as false.
 
-## Writting my first server
+## Write my first server
 
 To start your first server only needs develop the routes to be called, for example:
 
@@ -181,33 +181,40 @@ Or can access directly to the express application server:
 const expressApp = server.app;
 ```
 
-## Using middlewares
+## Using middleware
 
-The server package includes some middlewares that optional can be used. These are some middlewares used in the IKOA Business Platform development.
+The server package includes some middleware that optional can be used. These are some middleware used in the IKOA Business Platform development.
 
 ### Response handlers
 
-The response handlers are middlewares to handle the express api response for success or error response.
+The response handlers are middleware to handle the express api response for success or error response.
 
 Success handler always send responses in JSON format, it only transform the response data to JSON and stream it to the client. To receive the response the server package the express response `locals` variable. Inside it handle `response`, any other variable in `locals` is not handled into the success handler.
 
 Error handler takes into account several error sources like MongoDB, Joi validators, authentication service or the platform error schema:
 
 ```js
-interface IError {
-  boError: number;
-  boStatus: number;
-  boData: any;
+export interface IError {
+  value: number;
+  str?: string;
+  status?: HTTP_STATUS;
+}
+
+interface IErrorResponse {
+  boError: IError;
+  boStatus: HTTP_STATUS;
+  boData?: any;
 }
 ```
 
-For specific error sources, not all posible values are handled, only an small set of it are handled. If your server need handle an specific error type you can make your own handle error or can add an error handler middlewate that translate the error to the platform error schema.
+For specific error sources, not all possible values are handled, only an small set of it are handled. If your server need handle an specific error type you can make your own handle error or can add an error handler middleware that translate the error to the platform error schema.
 
-The platform error schema is translated to an express response setting the response stats to the value of `boStatus` or by default `400` if its omitted. The body of the response has the following schema:
+The platform error schema is translated to an express response setting the response stats to the value of `boStatus` or get value from `boError.status` or by default `400` if its omitted. The body of the response has the following schema:
 
 ```js
 {
-  error: number; // Get from boError
+  error: number; // Get from boError.value
+  description: string; // Get from boError.str
   data: any; // Get from boData
 }
 ```
@@ -242,8 +249,6 @@ router.get(
 export default router;
 ```
 
-Using default server schema don't need to use the `ResponseHandler` middlewares. There are added to `express` by default to handle all responses globally.
-
 ### Data validation
 
 To allow data validation the package includes a middleware to validate any request data. Data validation is done using Joi schemas. The server package exports a custom instance of Joi with objectId validation.
@@ -273,7 +278,7 @@ router.post(
       age: 25
     };
     next();
-  },
+  }
 );
 
 export default router;
@@ -391,7 +396,7 @@ abstract class CRUD<T, D extends mongoose.Document> {
 
 By default `CRUD` perform all queries with condition `status > 0`. If you don't handle the status field at object creation or the field is not needed, you can prevent use this fields in queries setting the options at the `CRUD` constructor:
 
-```js
+````js
 import { CRUD } from "@ikoabo/core_srv";
 import { MyModelDocument, MyModelModel } from "@/models/events.model";
 
@@ -416,3 +421,160 @@ class MyModelCtrl extends CRUD<MyModelDocument>{
   }
 }
 ``
+
+## Predefined constants
+
+Package include a set of predefined constants to be used inside backend/frontend development.
+It includes constants to prefeined object status, prefined general errors, logs level, and HTTP status responses.
+
+```js
+import { LOG_LEVEL, SERVER_STATUS, SERVER_ERRORS, HTTP_STATUS } from "@ikoabo/core";
+````
+
+## Using Logger
+
+Logger is an small wrapper of [`winston`][winston] logger. It only hande logs to the console
+output and must be configured on server initialization. Logger support the same log levels of
+[`winston`][winston].
+
+```js
+import { Logger, LOG_LEVEL } from "@ikoabo/core";
+
+/* Set the global log level */
+Logger.setLogLevel(LOG_LEVEL.DEBUG);
+
+/* Initialize the logger for multiple components */
+const _logger1 = new Logger("MiComponent");
+const _logger2 = new Logger("OtherComponent");
+
+/* Log an error from one logger */
+_logger1.error("Error from one component", {
+  code: 2,
+  msg: "Invalid call"
+});
+
+/* Log a debug message from the other logger */
+_logger2.debug("Debug from another component", {
+  field: "social",
+  value: 10
+});
+```
+
+## Using Arrays utilities functions
+
+Arrays implements functions to improve array data manipulation. it implements functions to ensure array initialization with include/exclude values, array sort, binary search and multiple arrays intersection.
+
+```js
+import { Arrays } from "@ikoabo/core";
+let arr1 = [1, 2, 3, 5, 7];
+let arrInclude = [3, 15, 6];
+let arrExclude = [2, 5];
+
+/* Get new array [1, 3, 7, 15, 6] */
+let newArr = Arrays.initialize < number > (arr1, arrInclude, arrExclude);
+console.log(newArr);
+
+/* Sort the array and search a value inside the array */
+Arrays.sort < number > newArr;
+console.log(Arrays.search(newArr, 7)); // Prints 3
+
+/* Intersect multiple arrays, gets [3] */
+let intArr = Arrays.intersect < number > (newArr, arr1, arrInclude);
+console.log(intArr);
+```
+
+## Using Objects utilities functions
+
+Objects utilities functions allow to fetch object properties and set
+a default value if any path don't exists.
+
+```js
+import { Objects } from "@ikoabo/core";
+
+let obj = {
+  alfa: {
+    profiles: [
+      {
+        name: "Jhon",
+        age: 25
+      }
+    ]
+  }
+};
+
+/* Print Jhon */
+console.log(Objects.get(obj, "alfa.profiles.0.name", "no-name"));
+
+/* Try to get non existent property */
+if (!Objects.get(obj, "alfa.profiles.0.social.facebook")) {
+  console.log("Facebook not configured");
+}
+```
+
+Also functions allow to set an object value following the geiven path.
+If any elements inside path don't exists then it's created.
+
+```js
+import { Objects } from "@ikoabo/core";
+
+let obj = {
+  alfa: {
+    profiles: [
+      {
+        name: "Jhon",
+        age: 25
+      }
+    ]
+  }
+};
+
+/* Update property */
+Objects.set(obj, "alfa.profiles.0.name", "Jhon Doe");
+console.log(Objects.get(obj, "alfa.profiles.0.name"));
+
+/* Set non existent property */
+Objects.set(obj, "alfa.profiles.0.social.facebook.profile", "facebookid");
+console.log(Objects.get(obj, "alfa.profiles.0.social.facebook.profile"));
+```
+
+## Using Tokens utilities functions
+
+Tokens its a set of function to generate pseudorandoms tokens. There are functions to generate
+short, medium and long tokens. Short and medium token are generated with [`uniqid`][uniqid] and long tokens are generated with [`sha.js`][sha.js].
+
+```js
+import { Tokens } from "@ikoabo/core";
+
+/* Generate short token (8 byte) */
+const shortToken = Tokens.short;
+
+/* Generate medium token */
+const mediumToken1 = Tokens.medium1; // 12 bytes
+const mediumToken2 = Tokens.medium2; // 18 bytes
+
+/* Generate long token with sha256 */
+const longToken = Tokens.long;
+```
+
+## Using Streams
+
+Stream class allow to pipe streamed data to the `express` response. User can use a filter function to prepare the object data to be sent into the response. Filter function its an optional parameter.
+
+```js
+import { Streams } from "@ikoabo/core";
+
+...
+
+router.get("/data",
+  (req: Request, res: Response, _next: NextFunction) => {
+    MongoModel.find({ ... }).cursor().pipe(Streams.stringify((data: any)=>{
+      return {
+        id: data.id,
+        name: data.name
+      };
+    })).pipe(res.type("json"));
+  },
+  ResponseHandler.success,
+  ResponseHandler.error
+);
+```
