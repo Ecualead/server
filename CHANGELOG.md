@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [2.0.1] - 2021-08-03
+- Fix through dev dependency
+
 ## [2.0.0] - 2021-08-03
 - Update error handler
 - Moving core components to server package

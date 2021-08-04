@@ -113,11 +113,7 @@ export abstract class CRUD<D extends mongoose.Document> {
         .findOneAndUpdate(query, update, options)
         .then((value: any) => {
           if (!value) {
-            reject({
-              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-            });
-            return;
+            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
           resolve(value as D);
         })
@@ -173,11 +169,7 @@ export abstract class CRUD<D extends mongoose.Document> {
       baseQuery
         .then((value: D) => {
           if (!value) {
-            reject({
-              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-            });
-            return;
+            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
           resolve(value);
         })
@@ -293,11 +285,7 @@ export abstract class CRUD<D extends mongoose.Document> {
         .findByIdAndUpdate(query, update, { new: true })
         .then((value: D) => {
           if (!value) {
-            reject({
-              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-            });
-            return;
+            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
           resolve(value);
         })
@@ -321,11 +309,7 @@ export abstract class CRUD<D extends mongoose.Document> {
         .findOneAndUpdate(query, update, { new: true })
         .then((value: D) => {
           if (!value) {
-            reject({
-              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-            });
-            return;
+            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
           resolve(value);
         })
@@ -346,10 +330,7 @@ export abstract class CRUD<D extends mongoose.Document> {
 
       /* Check for valid obj id */
       if (!objId) {
-        return next({
-          boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-          boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-        });
+        return next({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
       }
 
       /* Look for the target object */
@@ -357,18 +338,12 @@ export abstract class CRUD<D extends mongoose.Document> {
         .then((value: any) => {
           /* Check if the given module is valid */
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
-            return next({
-              boError: SERVER_ERRORS.OBJECT_NOT_FOUND,
-              boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-            });
+            return next({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
 
           /* Check the object owner if its necessary */
           if (ownerId && value.owner.toString() !== ownerId) {
-            return next({
-              boError: SERVER_ERRORS.INVALID_OWNER,
-              boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN
-            });
+            return next({ boError: SERVER_ERRORS.INVALID_OWNER });
           }
 
           /* Store the object information to be used into the next middleware */
