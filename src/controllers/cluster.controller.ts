@@ -9,9 +9,10 @@
  * permission of the author.
  */
 import cluster from "cluster";
-import { Logger, LOG_LEVEL } from "@ikoabo/core";
+import { Logger } from "./logger.controller";
 import express from "express";
 import { HttpServer } from "./server.controller";
+import { LOG_LEVEL } from "../constants/logger.enum";
 
 /* Initialize the logger */
 Logger.setLogLevel(process.env.LOG || LOG_LEVEL.ERROR);

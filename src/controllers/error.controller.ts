@@ -8,7 +8,21 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { HTTP_STATUS, SERVER_ERRORS, Logger } from "@ikoabo/core";
+import { SERVER_ERRORS } from "../constants/errors.enum";
+import { HTTP_STATUS } from "../constants/http.status.enum";
+import { Logger } from "./logger.controller";
+
+export interface IErrorResponse{
+  boError: IError;
+  boStatus?: HTTP_STATUS;
+  boData?: any;
+}
+
+export interface IError{
+  value: number;
+  str?: string;
+  status?: HTTP_STATUS;
+}
 
 /**
  * Errors controller
@@ -40,7 +54,7 @@ class Errors {
    *
    * @param err
    */
-  parseError(err: any) {
+  parseError(err: any): IErrorResponse {
     const error: any = {
       status: err.boStatus ? err.boStatus : HTTP_STATUS.HTTP_4XX_BAD_REQUEST,
       response: {
