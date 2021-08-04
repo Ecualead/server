@@ -9,13 +9,13 @@
  * permission of the author.
  */
 import { Request, Response, NextFunction } from "express";
-import { SERVER_ERRORS } from "src/constants/errors.enum";
-import { Objects } from "src/utils/objects.util";
+import { SERVER_ERRORS } from "../constants/errors.enum";
+import { Objects } from "../utils/objects.util";
 import { HTTP_STATUS } from "../constants/http.status.enum";
 import { ErrorCtrl } from "../controllers/error.controller";
 
 /**
- * Base middlewares to handle express responses
+ * Base middleware to handle express responses
  */
 export class ResponseHandler {
   /**
@@ -55,7 +55,7 @@ export class ResponseHandler {
     const errObj = ErrorCtrl.parseError(err);
 
     /* Prepare error response */
-    const status = Objects.get(errObj, "boError.status", HTTP_STATUS.HTTP_4XX_BAD_REQUEST);
+    const status = Objects.get(errObj, "boStatus", Objects.get(errObj, "boError.status", HTTP_STATUS.HTTP_4XX_BAD_REQUEST));
     const response: any = {
       error: Objects.get(errObj, "boError.value", SERVER_ERRORS.UNKNOWN_ERROR.value),
       description: Objects.get(errObj, "boError.str", SERVER_ERRORS.UNKNOWN_ERROR.str)
