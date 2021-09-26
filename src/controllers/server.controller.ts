@@ -13,7 +13,6 @@ import cors from "cors";
 import express, { Request, Response, NextFunction } from "express";
 import Helmet from "helmet";
 import methodOverride from "method-override";
-import moment from "moment";
 import mongoose from "mongoose";
 import logger from "morgan";
 import onFinished from "on-finished";
@@ -73,12 +72,8 @@ export class HttpServer {
       /* Connect to the MongoDB server */
       mongoose
         .connect(process.env.MONGODB_URI, {
-          useFindAndModify: !!process.env.MONGODB_NOT_USE_NEW_URL_PARSER,
-          useNewUrlParser: !process.env.MONGODB_NOT_USE_NEW_URL_PARSER,
-          useCreateIndex: !process.env.MONGODB_NOT_USE_CREATE_INDEX,
           autoIndex: !process.env.MONGODB_NOT_AUTO_INDEX,
-          poolSize: parseInt(process.env.MONGODB_POOL_SIZE || "10"),
-          useUnifiedTopology: !process.env.MONGODB_NOT_USE_UNIFIED_TOPOLOGY
+          maxPoolSize: parseInt(process.env.MONGODB_POOL_SIZE || "20")
         })
         .then(() => {
           this._logger.info("Connected to MongoDB", { worker: this.worker });
@@ -183,7 +178,7 @@ export class HttpServer {
             }
 
             const requestTrace: any = {
-              stamp: moment.utc().toDate().getTime(),
+              stamp: new Date(),
               err: err,
               req: request,
               res: response,

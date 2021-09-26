@@ -11,7 +11,6 @@
 import { Request, Response, NextFunction } from "express";
 import mongoose, { EnforceDocument } from "mongoose";
 import { SERVER_ERRORS } from "../constants/errors.enum";
-import { HTTP_STATUS } from "../constants/http.status.enum";
 import { SERVER_STATUS } from "../constants/status.enum";
 import { Objects } from "../utils/objects.util";
 import { Logger } from "./logger.controller";
@@ -238,7 +237,7 @@ export abstract class CRUD<D extends mongoose.Document> {
     sort?: any,
     skip?: number,
     limit?: number
-  ): mongoose.Query<EnforceDocument<D, {}>[], EnforceDocument<D, {}>, {}, D> {
+  ): mongoose.Query<EnforceDocument<D, {}, {}>[], EnforceDocument<D, {}, {}>, {}, D> {
     /* Prepare the query object */
     const query = this._prepareQuery(queryId);
 
