@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [2.1.0] - 2021-09-26
+- Update project dependencies
+- Support for Typegoose 9
+- Support for Mongoose 6
+
 ## [2.0.1] - 2021-08-03
 - Fix through dev dependency
 
