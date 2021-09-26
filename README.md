@@ -29,10 +29,7 @@ To run a microservice using `@ikoabo/server` there are some environment variable
 ### Database environment variables
 
 - `MONGODB_URI`: MongoDB database URI connection. If the variable is omitted the database connection is omitted.
-- `MONGODB_NOT_USE_CREATE_INDEX`: If it's `true` prevent Mongoose connection use the `useCreateIndex` initialization option. Any value different of `true` is considered as false.
-- `MONGODB_NOT_USE_NEW_URL_PARSER`: If it's `true` prevent Mongoose connection use the `useNewUrlParser` initialization option. Any value different of `true` is considered as false.
 - `MONGODB_NOT_AUTO_INDEX`: If it's `true` prevent Mongoose connection use the `autoIndex` initialization option. Any value different of `true` is considered as false.
-- `MONGODB_NOT_USE_UNIFIED_TOPOLOGY`: If it's `true` prevent Mongoose connection use the `useUnifiedTopology` initialization option. Any value different of `true` is considered as false.
 - `MONGODB_POOL_SIZE`: Set the Mongoose pool size, by default `10` if the variable is omitted.
 
 ### HTTP server environment variables
