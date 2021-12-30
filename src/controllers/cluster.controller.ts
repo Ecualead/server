@@ -1,10 +1,10 @@
 /**
- * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2022 ECUALEAD
  *
  * All Rights Reserved
- * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
  *
- * This file is part of the IKOA Business Oportunity Server Package
+ * This file is part of the Developer Server Package
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
@@ -51,8 +51,6 @@ export class ClusterServer {
 
   /**
    * Initialize the server cluster
-   *
-   * @param settings  Service settings
    */
   public static setup(slaveHooks?: ISlaveHooks, masterHooks?: IMasterHooks): ClusterServer {
     if (ClusterServer._instance) {
@@ -76,33 +74,29 @@ export class ClusterServer {
 
   /**
    * Run the server cluster
-   *
-   * @param routes  Routes to initialize the application server
-   * @param customMaster  Custom cluster master process handler
-   * @param customSlave  Custom cluster slave process handler
    */
   public run(
     routes?: any,
-    customMaster?: () => void,
-    customSlave?: (server: HttpServer, routes?: any) => void
-  ) {
-    /* Initialize the Http Server */
-    const server = HttpServer.shared;
-
+    customMaster?: () => Promise<void>,
+    customSlave?: (server: HttpServer, routes?: any) => Promise<void>
+  ): Promise<void> {
     /* Handle the custer master process */
-    if (cluster.isMaster) {
+    if (cluster.isPrimary) {
       /* Check if master process has custom handler */
       if (customMaster) {
-        customMaster();
+        return customMaster();
       } else {
-        this._runMaster();
+        return this._runMaster();
       }
     } else {
+      /* Initialize the Http Server */
+      const server = HttpServer.shared;
+
       /* Check if slave process has custom handler */
       if (customSlave) {
-        customSlave(server, routes);
+        return customSlave(server, routes);
       } else {
-        this._runSlave(server, routes);
+        return this._runSlave(server, routes);
       }
     }
   }
@@ -110,62 +104,77 @@ export class ClusterServer {
   /**
    * Run the default cluster master process
    */
-  private _runMaster() {
-    this._logger.info("Cluster master process is running", { pid: process.pid });
+  private _runMaster(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this._logger.info("Cluster master process is running", { pid: process.pid });
 
-    /* Initialize the number of required workers */
-    const instances = parseInt(process.env.INSTANCES || "1");
-    for (let i = 0; i < instances; i++) {
-      const worker = cluster.fork();
-      if (this._masterHooks.worker) {
-        this._masterHooks.worker(worker);
+      /* Initialize the number of required workers */
+      const instances = parseInt(process.env.INSTANCES || "1");
+      for (let i = 0; i < instances; i++) {
+        const worker = cluster.fork();
+        if (this._masterHooks.worker) {
+          this._masterHooks.worker(worker);
+        }
       }
-    }
 
-    /* Hanlde cluster worker restart on exit */
-    cluster.on("exit", (worker, code, signal) => {
-      this._logger.error("Cluster worker died", {
-        pid: process.pid,
-        worker: worker.id,
-        code: code,
-        signal: signal
+      /* Handle cluster worker restart on exit */
+      cluster.on("exit", (worker, code, signal) => {
+        this._logger.error("Cluster worker died", {
+          pid: process.pid,
+          worker: worker.id,
+          code: code,
+          signal: signal
+        });
+        const newWorker = cluster.fork();
+        if (this._masterHooks.worker) {
+          this._masterHooks.worker(newWorker);
+        }
       });
-      const newWorker = cluster.fork();
-      if (this._masterHooks.worker) {
-        this._masterHooks.worker(newWorker);
-      }
+      resolve();
     });
   }
 
   /**
    * Run the default cluster slave process
-   *
-   * @param server  HttpServer instance
-   * @param routes  Routes to initialize the application server
    */
   private _runSlave(server: HttpServer, routes?: any): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       /* Initialize MongoDB connection */
-      this._slavePreMongo().then(() => {
-        this._slaveMongo(server).then(() => {
-          this._slavePostMongo().then(() => {
-            /* Initialize Express application */
-            this._slavePreExpress().then(() => {
-              this._slaveExpress(server, routes).then(() => {
-                this._slavePostExpress(server).then(() => {
-                  /* Start the slave worker HTTP server */
-                  server.listen(parseInt(process.env.PORT || "3000")).then(() => {
-                    if (this._slaveHooks.running) {
-                      this._slaveHooks.running();
-                    }
-                    resolve();
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
+      this._slavePreMongo()
+        .then(() => {
+          this._slaveMongo(server)
+            .then(() => {
+              this._slavePostMongo()
+                .then(() => {
+                  /* Initialize Express application */
+                  this._slavePreExpress()
+                    .then(() => {
+                      this._slaveExpress(server, routes)
+                        .then(() => {
+                          this._slavePostExpress(server)
+                            .then(() => {
+                              /* Start the slave worker HTTP server */
+                              server
+                                .listen(parseInt(process.env.PORT || "3000"))
+                                .then(() => {
+                                  if (this._slaveHooks.running) {
+                                    this._slaveHooks.running();
+                                  }
+                                  resolve();
+                                })
+                                .catch(reject);
+                            })
+                            .catch(reject);
+                        })
+                        .catch(reject);
+                    })
+                    .catch(reject);
+                })
+                .catch(reject);
+            })
+            .catch(reject);
+        })
+        .catch(reject);
     });
   }
 
@@ -173,14 +182,14 @@ export class ClusterServer {
    * Hook called before initialize the MongoDB connection
    */
   private _slavePreMongo(): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (this._slaveHooks.preMongo) {
         this._slaveHooks
           .preMongo()
           .then(resolve)
           .catch((err: any) => {
             this._logger.error("Invalid pre mongoose hook", err);
-            resolve();
+            reject(err);
           });
         return;
       }
@@ -192,9 +201,9 @@ export class ClusterServer {
    * Initialize MongoDB connection
    */
   private _slaveMongo(server: HttpServer): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       /* Initialize MongoDB */
-      server.initMongo().then(resolve);
+      server.initMongo().then(resolve).catch(reject);
     });
   }
 
@@ -202,14 +211,14 @@ export class ClusterServer {
    * Hook called after initialize the MongoDB connection
    */
   private _slavePostMongo(): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (this._slaveHooks.postMongo) {
         this._slaveHooks
           .postMongo()
           .then(resolve)
           .catch((err: any) => {
             this._logger.error("Invalid post mongoose hook", err);
-            resolve();
+            reject(err);
           });
         return;
       }
@@ -221,14 +230,14 @@ export class ClusterServer {
    * Hook called before initialize the Express server
    */
   private _slavePreExpress(): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (this._slaveHooks.preExpress) {
         this._slaveHooks
           .preExpress()
           .then(resolve)
           .catch((err: any) => {
             this._logger.error("Invalid pre express hook", err);
-            resolve();
+            reject(err);
           });
         return;
       }
@@ -240,9 +249,12 @@ export class ClusterServer {
    * Initialize the Express server
    */
   private _slaveExpress(server: HttpServer, routes?: any): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       /* Initialize Express */
-      server.initExpress(cluster.worker, this._slaveHooks.preRoutes, routes).then(resolve);
+      server
+        .initExpress(cluster.worker, this._slaveHooks.preRoutes, routes)
+        .then(resolve)
+        .catch(reject);
     });
   }
 
@@ -250,14 +262,14 @@ export class ClusterServer {
    * Hook called after initialize the Express server
    */
   private _slavePostExpress(server: HttpServer): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (this._slaveHooks.postExpress) {
         this._slaveHooks
           .postExpress(server.app)
           .then(resolve)
           .catch((err: any) => {
             this._logger.error("Invalid post express hook", err);
-            resolve();
+            reject(err);
           });
         return;
       }
