@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.2.0 - 2021-12-29
+- Update project dependencies
+- Move project to ECUALEAD
+- Fix Mongoose version support
+
 ## [2.1.0] - 2021-09-26
 - Update project dependencies
 - Support for Typegoose 9
