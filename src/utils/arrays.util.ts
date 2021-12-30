@@ -1,10 +1,10 @@
 /**
- * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2022 ECUALEAD
  *
  * All Rights Reserved
- * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
  *
- * This file is part of the IKOA Business Oportunity Server Package
+ * This file is part of the Developer Server Package
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
@@ -15,10 +15,6 @@
 export class Arrays {
   /**
    * Initialize and array with default values and values that can't be used
-   *
-   * @param value  Initial values
-   * @param defaults  List of defaults values that array must contain
-   * @param prevent  List of elements that array can't contain
    */
   public static initialize<T>(value: T[] | null, defaults?: T[], prevent?: T[]): T[] {
     let array: T[];
@@ -48,8 +44,6 @@ export class Arrays {
 
   /**
    * Sort the given array
-   *
-   * @param arr  Array to be sorted
    */
   public static sort<T>(arr: T[]): T[] {
     return arr.sort((n1: T, n2: T): number => {
@@ -65,9 +59,6 @@ export class Arrays {
 
   /**
    * Binary search on the given array
-   *
-   * @param arr  Array of values
-   * @param value  Value to search into the array
    */
   public static search<T>(arr: T[], value: T): number {
     let start = 0,
@@ -96,8 +87,6 @@ export class Arrays {
 
   /**
    * Intersect all the array items
-   *
-   * @param arr  List of arrays to intersect
    */
   public static intersect<T>(...arr: T[][]): T[] {
     /* Sort all the results */

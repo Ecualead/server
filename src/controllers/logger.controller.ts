@@ -1,10 +1,10 @@
 /**
- * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2022 ECUALEAD
  *
  * All Rights Reserved
- * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
  *
- * This file is part of the IKOA Business Oportunity Server Package
+ * This file is part of the Developer Server Package
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
@@ -30,8 +30,6 @@ export class Logger {
 
   /**
    * Set the global log level
-   *
-   * @param level  log level to handle
    */
   public static setLogLevel(level: string): void {
     Logger._level = allowedLevels.indexOf(level) < 0 ? LOG_LEVEL.ERROR : level;
@@ -46,9 +44,6 @@ export class Logger {
 
   /**
    * Show an error log entry
-   *
-   * @param message  Log message to show
-   * @param meta  Additional metadata to show into the log entry
    */
   public error(message: string, meta?: any): void {
     this._dbg.log(LOG_LEVEL.ERROR, message, meta);
@@ -56,9 +51,6 @@ export class Logger {
 
   /**
    * Show a warning log entry
-   *
-   * @param message  Log message to show
-   * @param meta  Additional metadata to show into the log entry
    */
   public warn(message: string, meta?: any): void {
     this._dbg.log(LOG_LEVEL.WARN, message, meta);
@@ -66,9 +58,6 @@ export class Logger {
 
   /**
    * Show an info log entry
-   *
-   * @param message  Log message to show
-   * @param meta  Additional metadata to show into the log entry
    */
   public info(message: string, meta?: any): void {
     this._dbg.log(LOG_LEVEL.INFO, message, meta);
@@ -76,9 +65,6 @@ export class Logger {
 
   /**
    * Show a debug log entry
-   *
-   * @param message  Log message to show
-   * @param meta  Additional metadata to show into the log entry
    */
   public debug(message: string, meta?: any): void {
     this._dbg.log(LOG_LEVEL.DEBUG, message, meta);

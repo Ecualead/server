@@ -1,20 +1,24 @@
 /**
- * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2022 ECUALEAD
  *
  * All Rights Reserved
- * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
  *
- * This file is part of the IKOA Business Oportunity Server Package
+ * This file is part of the Developer Server Package
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-
+import { IError } from "src/controllers/error.controller";
 import { HTTP_STATUS } from "./http.status.enum";
+
+export interface IServiceErrors {
+  [key: string]: IError;
+}
 
 /**
  * Predefined server errors
  */
-export const SERVER_ERRORS = {
+export const SERVER_ERRORS: IServiceErrors = {
   UNKNOWN_ERROR: {
     value: 500,
     str: "unknown-error",
