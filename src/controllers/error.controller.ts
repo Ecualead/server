@@ -1,10 +1,10 @@
 /**
- * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2022 ECUALEAD
  *
  * All Rights Reserved
- * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
  *
- * This file is part of the IKOA Business Oportunity Server Package
+ * This file is part of the Developer Server Package
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
@@ -62,7 +62,7 @@ class Errors {
       return {
         boError: err.boError,
         boStatus: err.boStatus,
-        boData: err.boData,
+        boData: err.boData
       };
     }
 
@@ -78,7 +78,10 @@ class Errors {
 
     /* Check OAuth2 errors */
     if (err.code === 401) {
-      return { boError: SERVER_ERRORS.INVALID_OPERATION, boStatus: HTTP_STATUS.HTTP_4XX_UNAUTHORIZED };
+      return {
+        boError: SERVER_ERRORS.INVALID_OPERATION,
+        boStatus: HTTP_STATUS.HTTP_4XX_UNAUTHORIZED
+      };
     }
 
     return { boError: SERVER_ERRORS.INVALID_OPERATION, boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN };
