@@ -1,15 +1,15 @@
 /**
- * Copyright (C) 2020 - 2021 IKOA Business Opportunity
+ * Copyright (C) 2020 - 2022 ECUALEAD
  *
  * All Rights Reserved
- * Author: Reinier Millo Sánchez <millo@ikoabo.com>
+ * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
  *
- * This file is part of the IKOA Business Oportunity Server Package
+ * This file is part of the Developer Server Package
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
 import { Request, Response, NextFunction } from "express";
-import mongoose, { EnforceDocument } from "mongoose";
+import mongoose from "mongoose";
 import { SERVER_ERRORS } from "../constants/errors.enum";
 import { SERVER_STATUS } from "../constants/status.enum";
 import { Objects } from "../utils/objects.util";
@@ -20,16 +20,19 @@ export interface ICRUDOptions {
   preventStatusQuery?: boolean;
 }
 
+export type IQueryParameters = string | mongoose.Types.ObjectId | mongoose.FilterQuery<any>;
+
+export interface IQueryOptions extends mongoose.QueryOptions {
+  preventStatus?: boolean;
+}
+
 export abstract class CRUD<D extends mongoose.Document> {
   protected _model: mongoose.Model<D>;
   protected _logger: Logger;
   private _opts: ICRUDOptions;
 
   /**
-   *
-   * @param loggers
-   * @param model
-   * @param modelname
+   * CRUD constructor
    */
   constructor(logger: string, model: mongoose.Model<D>, opts?: ICRUDOptions) {
     this._logger = new Logger(logger);
@@ -42,8 +45,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Create new document object
-   *
-   * @param data
    */
   public create(data: any | any[]): Promise<D | D[]> {
     return this._model.create(data);
@@ -51,36 +52,69 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Prepare the mongoose query with an id string or query object
-   *
-   * @param queryId
    */
-  private _prepareQuery(queryId: string | any) {
-    if (typeof queryId === "string" || mongoose.isValidObjectId(queryId)) {
-      return { _id: queryId };
+  private _prepareQuery(query: IQueryParameters, preventStatus = false): mongoose.FilterQuery<any> {
+    if (typeof query === "string" || mongoose.isValidObjectId(query)) {
+      return { _id: query };
     }
 
     /* Check for status query prevent */
-    if (!this._opts.preventStatusQuery) {
-      const status = Objects.get(queryId, "status", null);
+    if (!this._opts.preventStatusQuery && !preventStatus) {
+      const status = Objects.get(query, "status", null);
       if (status === null) {
-        queryId["status"] = { $gt: SERVER_STATUS.UNKNOWN };
+        (query as any)["status"] = { $gt: SERVER_STATUS.UNKNOWN };
       }
     }
-    return queryId;
+    return query;
   }
 
   /**
-   * Update document object
-   *
-   * @param queryId
-   * @param dataSet
-   * @param update
-   * @param options
+   * Apply parameter to a query
    */
-  public update(queryId: string | any, dataSet?: any, update?: any, options?: any): Promise<D> {
+  private _applyQueryParameters(
+    query: mongoose.Query<any, any>,
+    populate?: string[],
+    sort?: any,
+    skip?: number,
+    limit?: number
+  ): mongoose.Query<any, any> {
+    /* Check if the populate value is set */
+    if (populate) {
+      populate.forEach((value: string) => {
+        query = query.populate(value);
+      });
+    }
+
+    /* Check for entries sort */
+    if (sort) {
+      query = query.sort(sort);
+    }
+
+    /* Check for entries skip */
+    if (skip) {
+      query = query.skip(skip);
+    }
+
+    /* Check for entries limit */
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    return query;
+  }
+
+  /**
+   * Update the document object
+   */
+  public update(
+    query: IQueryParameters,
+    dataSet?: mongoose.UpdateQuery<D>,
+    update?: mongoose.UpdateQuery<D>,
+    options?: IQueryOptions
+  ): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
-      const query: any = this._prepareQuery(queryId);
+      const queryObj = this._prepareQuery(query, options?.preventStatus);
 
       /* Ensure update variable is valid */
       if (!update) {
@@ -109,27 +143,23 @@ export abstract class CRUD<D extends mongoose.Document> {
 
       /* Find and update one document */
       this._model
-        .findOneAndUpdate(query, update, options)
-        .then((value: any) => {
+        .findOneAndUpdate(queryObj, update, options)
+        .then((value?: D) => {
           if (!value) {
             return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
-          resolve(value as D);
+          resolve(value);
         })
         .catch(reject);
     });
   }
 
   /**
-   * Fetch and object
-   *
-   * @param queryId
-   * @param options
-   * @param populate
+   * Fetches a single document object
    */
   public fetch(
-    queryId: string | any,
-    options?: any,
+    query: IQueryOptions,
+    options?: IQueryOptions,
     populate?: string[],
     sort?: any,
     skip?: number,
@@ -137,36 +167,15 @@ export abstract class CRUD<D extends mongoose.Document> {
   ): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
-      const query = this._prepareQuery(queryId);
+      const queryObj = this._prepareQuery(query);
 
       /* Initialize the Mongoose query */
-      let baseQuery = this._model.findOne(query, options ? options : {});
-
-      /* Check if the populate value is set */
-      if (populate) {
-        populate.forEach((value: string) => {
-          baseQuery = baseQuery.populate(value);
-        });
-      }
-
-      /* Check for entries sort */
-      if (sort) {
-        baseQuery.sort(sort);
-      }
-
-      /* Check for entries skip */
-      if (skip) {
-        baseQuery = baseQuery.skip(skip);
-      }
-
-      /* Check for entries limit */
-      if (limit) {
-        baseQuery = baseQuery.limit(limit);
-      }
+      let baseQuery: mongoose.Query<any, D> = this._model.findOne(queryObj, options ? options : {});
+      baseQuery = this._applyQueryParameters(baseQuery, populate, sort, skip, limit);
 
       /* Execute the query */
       baseQuery
-        .then((value: D) => {
+        .then((value?: D) => {
           if (!value) {
             return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
@@ -178,46 +187,21 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Fetch all objects as stream cursor
-   *
-   * @param queryId
-   * @param options
-   * @param populate
    */
   public fetchAll(
-    queryId: any,
-    options?: any,
+    query: IQueryOptions,
+    options?: IQueryOptions,
     populate?: string[],
     sort?: any,
     skip?: number,
     limit?: number
   ): mongoose.QueryCursor<D> {
     /* Prepare the query object */
-    const query = this._prepareQuery(queryId);
+    const queryObj = this._prepareQuery(query);
 
     /* Initialize the Mongoose query */
-    let baseQuery = this._model.find(query, options ? options : {});
-
-    /* Check if the populate value is set */
-    if (populate) {
-      populate.forEach((value: string) => {
-        baseQuery = baseQuery.populate(value);
-      });
-    }
-
-    /* Check for entries sort */
-    if (sort) {
-      baseQuery.sort(sort);
-    }
-
-    /* Check for entries skip */
-    if (skip) {
-      baseQuery = baseQuery.skip(skip);
-    }
-
-    /* Check for entries limit */
-    if (limit) {
-      baseQuery = baseQuery.limit(limit);
-    }
+    let baseQuery = this._model.find(queryObj, options ? options : {});
+    baseQuery = this._applyQueryParameters(baseQuery, populate, sort, skip, limit);
 
     /* Return cursor query */
     return baseQuery.cursor();
@@ -225,46 +209,21 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Fetch all objects as raw query
-   *
-   * @param queryId
-   * @param options
-   * @param populate
    */
   public fetchRaw(
-    queryId: any,
-    options?: any,
+    query: IQueryOptions,
+    options?: IQueryOptions,
     populate?: string[],
     sort?: any,
     skip?: number,
     limit?: number
-  ): mongoose.Query<EnforceDocument<D, {}, {}>[], EnforceDocument<D, {}, {}>, {}, D> {
+  ): mongoose.Query<any, D> {
     /* Prepare the query object */
-    const query = this._prepareQuery(queryId);
+    const queryObj = this._prepareQuery(query);
 
     /* Initialize the Mongoose query */
-    let baseQuery = this._model.find(query, options ? options : {});
-
-    /* Check if the populate value is set */
-    if (populate) {
-      populate.forEach((value: string) => {
-        baseQuery = baseQuery.populate(value);
-      });
-    }
-
-    /* Check for entries sort */
-    if (sort) {
-      baseQuery.sort(sort);
-    }
-
-    /* Check for entries skip */
-    if (skip) {
-      baseQuery = baseQuery.skip(skip);
-    }
-
-    /* Check for entries limit */
-    if (limit) {
-      baseQuery = baseQuery.limit(limit);
-    }
+    let baseQuery = this._model.find(queryObj, options ? options : {});
+    baseQuery = this._applyQueryParameters(baseQuery, populate, sort, skip, limit);
 
     /* Return query */
     return baseQuery;
@@ -272,17 +231,15 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * SoftDelete the given object
-   *
-   * @param queryId
    */
-  public delete(queryId: string | any): Promise<D> {
+  public delete(query: IQueryOptions): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
-      const query = this._prepareQuery(queryId);
+      const queryObj = this._prepareQuery(query);
       const update: any = { $set: { status: SERVER_STATUS.SOFT_DELETE } };
       this._model
-        .findByIdAndUpdate(query, update, { new: true })
-        .then((value: D) => {
+        .findOneAndUpdate(queryObj, update, { new: true })
+        .then((value?: D) => {
           if (!value) {
             return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
@@ -294,19 +251,16 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Update an object status
-   *
-   * @param queryId
-   * @param status
    */
-  protected _updateStatus(queryId: string, status: SERVER_STATUS): Promise<D> {
+  protected _updateStatus(query: IQueryOptions, status: SERVER_STATUS): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
-      const query = this._prepareQuery(queryId);
+      const queryObj = this._prepareQuery(query);
 
       const update: any = { $set: { status: status } };
       this._model
-        .findOneAndUpdate(query, update, { new: true })
-        .then((value: D) => {
+        .findOneAndUpdate(queryObj, update, { new: true })
+        .then((value?: D) => {
           if (!value) {
             return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
           }
@@ -318,9 +272,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Middleware to fetch a valid object by its ID and check the owner if its necessary
-   *
-   * @param path Path to get ObjectID from request
-   * @param owner User owner ObjectID
    */
   public isValidOwner(path: string, owner?: string) {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -334,7 +285,7 @@ export abstract class CRUD<D extends mongoose.Document> {
 
       /* Look for the target object */
       this.fetch(objId)
-        .then((value: any) => {
+        .then((value?: any) => {
           /* Check if the given module is valid */
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
             return next({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
@@ -355,9 +306,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Set the document object as enabled
-   *
-   * @param id
-   * @returns
    */
   public enable(id: string): Promise<D> {
     const query: any = { _id: id, status: SERVER_STATUS.DISABLED };
@@ -366,9 +314,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Set the document object as disabled
-   *
-   * @param id
-   * @returns
    */
   public disable(id: string): Promise<D> {
     const query: any = { _id: id, status: SERVER_STATUS.ENABLED };
@@ -377,12 +322,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Execute a database operation over a filed with the given value
-   *
-   * @param op
-   * @param id
-   * @param field
-   * @param value
-   * @returns
    */
   private _fieldOp(op: string, id: string, field: string, value: any): Promise<D> {
     const query: any = { _id: id, status: { $gt: SERVER_STATUS.UNKNOWN } };
@@ -396,11 +335,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Execute addToSet op over field
-   *
-   * @param id
-   * @param field
-   * @param value
-   * @returns
    */
   public addToSet(id: string, field: string, value: any): Promise<D> {
     return this._fieldOp("$addToSet", id, field, value);
@@ -408,11 +342,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Execute push op over field
-   *
-   * @param id
-   * @param field
-   * @param value
-   * @returns
    */
   public push(id: string, field: string, value: any): Promise<D> {
     return this._fieldOp("$push", id, field, value);
@@ -420,11 +349,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Execute pushAll op over field
-   *
-   * @param id
-   * @param field
-   * @param value
-   * @returns
    */
   public pushAll(id: string, field: string, value: any): Promise<D> {
     return this._fieldOp("$pushAll", id, field, value);
@@ -432,11 +356,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Execute pull op over field
-   *
-   * @param id
-   * @param field
-   * @param value
-   * @returns
    */
   public pull(id: string, field: string, value: any): Promise<D> {
     return this._fieldOp("$pull", id, field, value);
@@ -444,11 +363,6 @@ export abstract class CRUD<D extends mongoose.Document> {
 
   /**
    * Execute pullAll op over field
-   *
-   * @param id
-   * @param field
-   * @param value
-   * @returns
    */
   public pullAll(id: string, field: string, value: any): Promise<D> {
     return this._fieldOp("$pullAll", id, field, value);
