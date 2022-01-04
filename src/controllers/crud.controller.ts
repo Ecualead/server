@@ -158,7 +158,7 @@ export abstract class CRUD<D extends mongoose.Document> {
    * Fetches a single document object
    */
   public fetch(
-    query: IQueryOptions,
+    query: IQueryParameters,
     options?: IQueryOptions,
     populate?: string[],
     sort?: any,
@@ -189,7 +189,7 @@ export abstract class CRUD<D extends mongoose.Document> {
    * Fetch all objects as stream cursor
    */
   public fetchAll(
-    query: IQueryOptions,
+    query: IQueryParameters,
     options?: IQueryOptions,
     populate?: string[],
     sort?: any,
@@ -211,7 +211,7 @@ export abstract class CRUD<D extends mongoose.Document> {
    * Fetch all objects as raw query
    */
   public fetchRaw(
-    query: IQueryOptions,
+    query: IQueryParameters,
     options?: IQueryOptions,
     populate?: string[],
     sort?: any,
@@ -232,7 +232,7 @@ export abstract class CRUD<D extends mongoose.Document> {
   /**
    * SoftDelete the given object
    */
-  public delete(query: IQueryOptions): Promise<D> {
+  public delete(query: IQueryParameters): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
       const queryObj = this._prepareQuery(query);
@@ -252,7 +252,7 @@ export abstract class CRUD<D extends mongoose.Document> {
   /**
    * Update an object status
    */
-  protected _updateStatus(query: IQueryOptions, status: SERVER_STATUS): Promise<D> {
+  protected _updateStatus(query: IQueryParameters, status: SERVER_STATUS): Promise<D> {
     return new Promise<D>((resolve, reject) => {
       /* Prepare the query object */
       const queryObj = this._prepareQuery(query);
