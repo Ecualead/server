@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2.2.2 - 2022-01-03
+- Fix import
+
+
+## 2.2.1 - 2021-12-29
+- Fix type exports
+
 ## 2.2.0 - 2021-12-29
 - Update project dependencies
 - Move project to ECUALEAD
