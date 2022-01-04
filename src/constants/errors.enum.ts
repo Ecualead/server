@@ -8,7 +8,7 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { IError } from "src/controllers/error.controller";
+import { IError } from "../controllers/error.controller";
 import { HTTP_STATUS } from "./http.status.enum";
 
 export interface IServiceErrors {
