@@ -1,20 +1,20 @@
-# IKOA Business Opportunity Server API
+# Developer Server Package
 
-Utility functions for basic development. This library is part of IKOA Business Opportunity Microservices Infraestructure.
+Utility functions for basic development. This library is part of ECUALEAD Microservices Infraestructure.
 
-[![Version npm](https://img.shields.io/npm/v/@ikoabo/server.svg?style=flat-square)](https://www.npmjs.com/package/@ikoabo/server)[![npm Downloads](https://img.shields.io/npm/dm/@ikoabo/server.svg?style=flat-square)](https://npmcharts.com/compare/@ikoabo/server?minimal=true)[![Build Status](https://gitlab.com/ikoabo/packages/server/badges/master/pipeline.svg)](https://gitlab.com/ikoabo/packages/server)[![coverage testing report](https://gitlab.com/ikoabo/packages/server/badges/master/coverage.svg)](https://gitlab.com/ikoabo/packages/server/-/commits/master)
+[![Version npm](https://img.shields.io/npm/v/@ecualead/server.svg?style=flat-square)](https://www.npmjs.com/package/@ecualead/server)[![npm Downloads](https://img.shields.io/npm/dm/@ecualead/server.svg?style=flat-square)](https://npmcharts.com/compare/@ecualead/server?minimal=true)[![Build Status](https://gitlab.com/ecualead/server/badges/master/pipeline.svg)](https://gitlab.com/ecualead/server)[![coverage testing report](https://gitlab.com/ecualead/server/badges/master/coverage.svg)](https://gitlab.com/ecualead/server/-/commits/master)
 
-[![NPM](https://nodei.co/npm/@ikoabo/server.png?downloads=true&downloadRank=true)](https://nodei.co/npm/@ikoabo/server/)
+[![NPM](https://nodei.co/npm/@ecualead/server.png?downloads=true&downloadRank=true)](https://nodei.co/npm/@ecualead/server/)
 
 ## Installation
 
 ```bash
-npm install @ikoabo/server
+npm install @ecualead/server
 ```
 
 ## Environment variables
 
-To run a microservice using `@ikoabo/server` there are some environment variables that can be configured to initialize the server. Environment variables are separated into three groups.
+To run a microservice using `@ecualead/server` there are some environment variables that can be configured to initialize the server. Environment variables are separated into three groups.
 
 ### Service variables
 
@@ -22,7 +22,7 @@ To run a microservice using `@ikoabo/server` there are some environment variable
 - `PORT`: Set the service listening port, by default `3000` if the variable is omitted.
 - `NODE_ENV`: NodeJS running environment, used to additional logger on request. Set to `production` to disable extended logger. Any other value is considered as `development`.
 - `INSTANCES`: Number of instances to run inside the cluster of process, by default `1` if the variable is omitted.
-- `LOG`: Components log level, it use the `Logger` wrapper off `@ikoabo/core`. By default `error` if the variable is omitted.
+- `LOG`: Components log level, it use the `Logger` wrapper off `@ecualead/core`. By default `error` if the variable is omitted.
 - `BODY_TRACE`: Set if the request body must be debbuged in development mode.
 - `RESPONSE_TRACE`: Set if the response body must be debbuged in development mode.
 
@@ -62,7 +62,7 @@ A single instance of Node.js runs in a single thread. To take advantage of multi
 To start an small server with with several worker processes we use:
 
 ```js
-import { ClusterServer } from "@ikoabo/server";
+import { ClusterServer } from "@ecualead/server";
 import MyRouter1 from "./routes1";
 import MyRouter2 from "./routes2";
 import MyRouter3 from "./routes3";
@@ -125,7 +125,7 @@ If the master runner is set, it must do the manual call to create and handle the
 To start a single threaded server we must execute the initialization process using the `HttpServer` class:
 
 ```js
-import { HttpServer } from "@ikoabo/server";
+import { HttpServer } from "@ecualead/server";
 import MyRouter1 from "./routes1";
 import MyRouter2 from "./routes2";
 import MyRouter3 from "./routes3";
@@ -220,7 +220,7 @@ We can write our router like:
 
 ```js
 import { Router, Request, Response, NextFunction } from "express";
-import { ResponseHandler } from "@ikoabo/server";
+import { ResponseHandler } from "@ecualead/server";
 const router = Router();
 
 router.get(
@@ -254,7 +254,7 @@ Using validators router can be rewritten
 
 ```js
 import { Router, Request, Response, NextFunction } from "express";
-import { ResponseHandler, Validator, ValidateObjectId } from "@ikoabo/server";
+import { ResponseHandler, Validator, ValidateObjectId } from "@ecualead/server";
 const router = Router();
 
 router.post(
@@ -314,7 +314,7 @@ The document owner and modifiedBy can be used to integrate with an user controll
 
 ```js
 import mongoose from "mongoose";
-import { BaseModel } from "@ikoabo/server";
+import { BaseModel } from "@ecualead/server";
 import { getModelForClass, prop, DocumentType, index } from "@typegoose/typegoose";
 
 @index({name:1}, {unique: true})
@@ -354,7 +354,7 @@ For each model we recommend create and export the document and the model to allo
 The data controller can be implemented extending the `CRUD` class:
 
 ```js
-import { CRUD } from "@ikoabo/core_srv";
+import { CRUD } from "@ecualead/core_srv";
 import { MyModelDocument, MyModelModel } from "@/models/events.model";
 
 class MyModelCtrl extends CRUD<MyModelDocument>{
@@ -394,7 +394,7 @@ abstract class CRUD<T, D extends mongoose.Document> {
 By default `CRUD` perform all queries with condition `status > 0`. If you don't handle the status field at object creation or the field is not needed, you can prevent use this fields in queries setting the options at the `CRUD` constructor:
 
 ````js
-import { CRUD } from "@ikoabo/core_srv";
+import { CRUD } from "@ecualead/core_srv";
 import { MyModelDocument, MyModelModel } from "@/models/events.model";
 
 class MyModelCtrl extends CRUD<MyModelDocument>{
@@ -425,7 +425,7 @@ Package include a set of predefined constants to be used inside backend/frontend
 It includes constants to prefeined object status, prefined general errors, logs level, and HTTP status responses.
 
 ```js
-import { LOG_LEVEL, SERVER_STATUS, SERVER_ERRORS, HTTP_STATUS } from "@ikoabo/core";
+import { LOG_LEVEL, SERVER_STATUS, SERVER_ERRORS, HTTP_STATUS } from "@ecualead/core";
 ````
 
 ## Using Logger
@@ -435,7 +435,7 @@ output and must be configured on server initialization. Logger support the same 
 [`winston`][winston].
 
 ```js
-import { Logger, LOG_LEVEL } from "@ikoabo/core";
+import { Logger, LOG_LEVEL } from "@ecualead/core";
 
 /* Set the global log level */
 Logger.setLogLevel(LOG_LEVEL.DEBUG);
@@ -462,7 +462,7 @@ _logger2.debug("Debug from another component", {
 Arrays implements functions to improve array data manipulation. it implements functions to ensure array initialization with include/exclude values, array sort, binary search and multiple arrays intersection.
 
 ```js
-import { Arrays } from "@ikoabo/core";
+import { Arrays } from "@ecualead/core";
 let arr1 = [1, 2, 3, 5, 7];
 let arrInclude = [3, 15, 6];
 let arrExclude = [2, 5];
@@ -486,7 +486,7 @@ Objects utilities functions allow to fetch object properties and set
 a default value if any path don't exists.
 
 ```js
-import { Objects } from "@ikoabo/core";
+import { Objects } from "@ecualead/core";
 
 let obj = {
   alfa: {
@@ -512,7 +512,7 @@ Also functions allow to set an object value following the geiven path.
 If any elements inside path don't exists then it's created.
 
 ```js
-import { Objects } from "@ikoabo/core";
+import { Objects } from "@ecualead/core";
 
 let obj = {
   alfa: {
@@ -540,7 +540,7 @@ Tokens its a set of function to generate pseudorandoms tokens. There are functio
 short, medium and long tokens. Short and medium token are generated with [`uniqid`][uniqid] and long tokens are generated with [`sha.js`][sha.js].
 
 ```js
-import { Tokens } from "@ikoabo/core";
+import { Tokens } from "@ecualead/core";
 
 /* Generate short token (8 byte) */
 const shortToken = Tokens.short;
@@ -558,7 +558,7 @@ const longToken = Tokens.long;
 Stream class allow to pipe streamed data to the `express` response. User can use a filter function to prepare the object data to be sent into the response. Filter function its an optional parameter.
 
 ```js
-import { Streams } from "@ikoabo/core";
+import { Streams } from "@ecualead/core";
 
 ...
 
