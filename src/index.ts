@@ -34,6 +34,7 @@ export { GeoJSON } from "./models/geojson.model";
 /* Export middlewares */
 export { ResponseHandler } from "./middlewares/response.middleware";
 export { Joi, Validator, ValidateObjectId } from "./middlewares/validator.middleware";
+export { FormURLEncoded } from "./middlewares/form.urlencoded.middleware";
 
 /* Export utils */
 export { Arrays } from "./utils/arrays.util";
