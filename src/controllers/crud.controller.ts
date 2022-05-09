@@ -195,7 +195,7 @@ export abstract class CRUD<D extends mongoose.Document> {
     sort?: any,
     skip?: number,
     limit?: number
-  ): mongoose.QueryCursor<D> {
+  ): mongoose.Cursor<D, any> {
     /* Prepare the query object */
     const queryObj = this._prepareQuery(query);
 
