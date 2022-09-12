@@ -2,7 +2,7 @@
 
 Utility functions for basic development. This library is part of ECUALEAD Microservices Infraestructure.
 
-[![Version npm](https://img.shields.io/npm/v/@ecualead/server.svg?style=flat-square)](https://www.npmjs.com/package/@ecualead/server)[![npm Downloads](https://img.shields.io/npm/dm/@ecualead/server.svg?style=flat-square)](https://npmcharts.com/compare/@ecualead/server?minimal=true)[![Build Status](https://gitlab.com/ecualead/server/badges/master/pipeline.svg)](https://gitlab.com/ecualead/server)[![coverage testing report](https://gitlab.com/ecualead/server/badges/master/coverage.svg)](https://gitlab.com/ecualead/server/-/commits/master)
+[![Version npm](https://img.shields.io/npm/v/@ecualead/server.svg?style=flat-square)](https://www.npmjs.com/package/@ecualead/server)[![npm Downloads](https://img.shields.io/npm/dm/@ecualead/server.svg?style=flat-square)](https://npmcharts.com/compare/@ecualead/server?minimal=true)
 
 [![NPM](https://nodei.co/npm/@ecualead/server.png?downloads=true&downloadRank=true)](https://nodei.co/npm/@ecualead/server/)
 
