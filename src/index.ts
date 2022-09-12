@@ -14,7 +14,7 @@ import { setGlobalOptions, Severity } from "@typegoose/typegoose";
 setGlobalOptions({ options: { allowMixed: Severity.ALLOW } });
 
 /* Export constants */
-export { SERVER_ERRORS } from "./constants/errors.enum";
+export { SERVER_ERRORS, IServiceErrors } from "./constants/errors.enum";
 export { SERVER_STATUS } from "./constants/status.enum";
 export { HTTP_STATUS } from "./constants/http.status.enum";
 export { LOG_LEVEL } from "./constants/logger.enum";
@@ -22,8 +22,8 @@ export { LOG_LEVEL } from "./constants/logger.enum";
 /* Export api controllers */
 export { ClusterServer, IMasterHooks, ISlaveHooks } from "./controllers/cluster.controller";
 export { HttpServer } from "./controllers/server.controller";
-export { CRUD } from "./controllers/crud.controller";
-export { ErrorCtrl } from "./controllers/error.controller";
+export { CRUD, IQueryParameters, IQueryOptions } from "./controllers/crud.controller";
+export { ErrorCtrl, IError, IErrorResponse } from "./controllers/error.controller";
 export { Logger } from "./controllers/logger.controller";
 export { Streams } from "./controllers/streams.controller";
 
@@ -34,6 +34,7 @@ export { GeoJSON } from "./models/geojson.model";
 /* Export middlewares */
 export { ResponseHandler } from "./middlewares/response.middleware";
 export { Joi, Validator, ValidateObjectId } from "./middlewares/validator.middleware";
+export { FormURLEncoded } from "./middlewares/form.urlencoded.middleware";
 
 /* Export utils */
 export { Arrays } from "./utils/arrays.util";

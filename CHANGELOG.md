@@ -1,19 +1,35 @@
 # CHANGELOG
 
+## 2.2.3 - 2022-01-04
+
+- Fix CRUD query parameters
+
+## 2.2.2 - 2022-01-03
+
+- Fix import
+
+## 2.2.1 - 2021-12-29
+
+- Fix type exports
+
 ## 2.2.0 - 2021-12-29
+
 - Update project dependencies
 - Move project to ECUALEAD
 - Fix Mongoose version support
 
 ## [2.1.0] - 2021-09-26
+
 - Update project dependencies
 - Support for Typegoose 9
 - Support for Mongoose 6
 
 ## [2.0.1] - 2021-08-03
+
 - Fix through dev dependency
 
 ## [2.0.0] - 2021-08-03
+
 - Update error handler
 - Moving core components to server package
 - Update to typegoose 8.x and mongoose 5.13.x
