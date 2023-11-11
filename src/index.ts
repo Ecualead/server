@@ -23,7 +23,7 @@ export { LOG_LEVEL } from "./constants/logger.enum";
 export { ClusterServer, IMasterHooks, ISlaveHooks } from "./controllers/cluster.controller";
 export { HttpServer } from "./controllers/server.controller";
 export { CRUD, IQueryParameters, IQueryOptions } from "./controllers/crud.controller";
-export { ErrorCtrl, IError, IErrorResponse } from "./controllers/error.controller";
+export { ErrorCtrl, IError } from "./controllers/error.controller";
 export { Logger } from "./controllers/logger.controller";
 export { Streams } from "./controllers/streams.controller";
 
@@ -40,3 +40,10 @@ export { FormURLEncoded } from "./middlewares/form.urlencoded.middleware";
 export { Arrays } from "./utils/arrays.util";
 export { Objects } from "./utils/objects.util";
 export { Tokens } from "./utils/tokens.util";
+
+// Export additional module components
+import * as express from 'express';
+import * as joi from 'joi';
+import *  as mongoose from 'mongoose';
+import * as typegoose from '@typegoose/typegoose';
+export { express, joi, mongoose, typegoose };

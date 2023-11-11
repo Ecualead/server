@@ -41,19 +41,15 @@ export class ResponseHandler {
     const errObj = ErrorCtrl.parseError(err);
 
     /* Prepare error response */
-    const status = Objects.get(
-      errObj,
-      "boStatus",
-      Objects.get(errObj, "boError.status", HTTP_STATUS.HTTP_4XX_BAD_REQUEST)
-    );
+    const status = errObj.status ?? HTTP_STATUS.HTTP_4XX_BAD_REQUEST;
     const response: any = {
-      error: Objects.get(errObj, "boError.value", SERVER_ERRORS.UNKNOWN_ERROR.value),
-      description: Objects.get(errObj, "boError.str", SERVER_ERRORS.UNKNOWN_ERROR.str)
+      error: errObj.value ?? SERVER_ERRORS.UNKNOWN_ERROR.value,
+      description: errObj.str ?? SERVER_ERRORS.UNKNOWN_ERROR.str
     };
 
     /* Check to set error data */
-    if (errObj.boData) {
-      response["data"] = errObj.boData;
+    if (errObj.data) {
+      response["data"] = errObj.data;
     }
 
     res.status(status).json(response).end();

@@ -12,16 +12,18 @@ import { SERVER_ERRORS } from "../constants/errors.enum";
 import { HTTP_STATUS } from "../constants/http.status.enum";
 import { Logger } from "./logger.controller";
 
-export interface IErrorResponse {
-  boError: IError;
-  boStatus?: HTTP_STATUS;
-  boData?: any;
-}
+export class IError {
+  public value: number;
+  public str?: string;
+  public status?: HTTP_STATUS;
+  public data?: any;
 
-export interface IError {
-  value: number;
-  str?: string;
-  status?: HTTP_STATUS;
+  constructor(value: number, str?: string, status?: HTTP_STATUS, data?: any) {
+    this.value = value;
+    this.str = str;
+    this.status = status;
+    this.data = data;
+  }
 }
 
 /**
@@ -54,37 +56,30 @@ class Errors {
    *
    * @param err
    */
-  parseError(err: any): IErrorResponse {
-    this._logger.error("Request error", { error: err, stack: err.stack });
+  parseError(error: any): IError {
+    this._logger.error("Request error", { error, stack: error.stack });
 
     /* Bypass formatted error */
-    if (err.boError) {
-      return {
-        boError: err.boError,
-        boStatus: err.boStatus,
-        boData: err.boData
-      };
+    if (error instanceof IError) {
+      return error;
     }
 
     /* Check for MongoDB errors */
-    if (err.name === "MongoError") {
-      switch (err.code) {
+    if (error.name === "MongoError") {
+      switch (error.code) {
         case 11000 /* Duplicated key error */:
-          return { boError: SERVER_ERRORS.OBJECT_DUPLICATED };
+          return SERVER_ERRORS.OBJECT_DUPLICATED;
         default:
-          return { boError: SERVER_ERRORS.INVALID_OPERATION };
+          return SERVER_ERRORS.INVALID_OPERATION;
       }
     }
 
     /* Check OAuth2 errors */
-    if (err.code === 401) {
-      return {
-        boError: SERVER_ERRORS.INVALID_OPERATION,
-        boStatus: HTTP_STATUS.HTTP_4XX_UNAUTHORIZED
-      };
+    if (error.code === 401) {
+      return SERVER_ERRORS.UNAUTHORIZED;
     }
 
-    return { boError: SERVER_ERRORS.INVALID_OPERATION, boStatus: HTTP_STATUS.HTTP_4XX_FORBIDDEN };
+    return SERVER_ERRORS.INVALID_OPERATION;
   }
 }
 

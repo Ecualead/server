@@ -19,34 +19,11 @@ export interface IServiceErrors {
  * Predefined server errors
  */
 export const SERVER_ERRORS: IServiceErrors = {
-  UNKNOWN_ERROR: {
-    value: 500,
-    str: "unknown-error",
-    status: HTTP_STATUS.HTTP_5XX_INTERNAL_SERVER_ERROR
-  },
-  INVALID_OPERATION: {
-    value: 501,
-    str: "invalid-operation",
-    status: HTTP_STATUS.HTTP_4XX_FORBIDDEN
-  },
-  INVALID_FIELDS: {
-    value: 502,
-    str: "invalid-fields",
-    status: HTTP_STATUS.HTTP_4XX_NOT_ACCEPTABLE
-  },
-  OBJECT_DUPLICATED: {
-    value: 503,
-    str: "object-duplicated",
-    status: HTTP_STATUS.HTTP_4XX_CONFLICT
-  },
-  OBJECT_NOT_FOUND: {
-    value: 504,
-    str: "object-not-found",
-    status: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-  },
-  INVALID_OWNER: {
-    value: 505,
-    str: "invalid-owner",
-    status: HTTP_STATUS.HTTP_4XX_UNAUTHORIZED
-  }
+  UNKNOWN_ERROR: new IError(500, "unknown-error", HTTP_STATUS.HTTP_5XX_INTERNAL_SERVER_ERROR),
+  INVALID_OPERATION: new IError(400, "invalid-operation", HTTP_STATUS.HTTP_4XX_FORBIDDEN),
+  INVALID_FIELDS: new IError(406, "invalid-fields", HTTP_STATUS.HTTP_4XX_NOT_ACCEPTABLE),
+  INVALID_FORM_CONTENT_TYPE: new IError(406, "invalid-form-content-type", HTTP_STATUS.HTTP_4XX_NOT_ACCEPTABLE),
+  OBJECT_DUPLICATED: new IError(403, "object-duplicated", HTTP_STATUS.HTTP_4XX_CONFLICT),
+  OBJECT_NOT_FOUND: new IError(404, "object-not-found", HTTP_STATUS.HTTP_4XX_NOT_FOUND),
+  UNAUTHORIZED: new IError(401, "unauthorized", HTTP_STATUS.HTTP_4XX_UNAUTHORIZED),
 };
