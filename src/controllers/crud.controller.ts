@@ -146,7 +146,7 @@ export abstract class CRUD<D extends mongoose.Document> {
         .findOneAndUpdate(queryObj, update, options)
         .then((value?: D) => {
           if (!value) {
-            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
+            return reject(SERVER_ERRORS.OBJECT_NOT_FOUND);
           }
           resolve(value);
         })
@@ -177,7 +177,7 @@ export abstract class CRUD<D extends mongoose.Document> {
       baseQuery
         .then((value?: D) => {
           if (!value) {
-            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
+            return reject(SERVER_ERRORS.OBJECT_NOT_FOUND);
           }
           resolve(value);
         })
@@ -241,7 +241,7 @@ export abstract class CRUD<D extends mongoose.Document> {
         .findOneAndUpdate(queryObj, update, { new: true })
         .then((value?: D) => {
           if (!value) {
-            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
+            return reject(SERVER_ERRORS.OBJECT_NOT_FOUND);
           }
           resolve(value);
         })
@@ -262,7 +262,7 @@ export abstract class CRUD<D extends mongoose.Document> {
         .findOneAndUpdate(queryObj, update, { new: true })
         .then((value?: D) => {
           if (!value) {
-            return reject({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
+            return reject(SERVER_ERRORS.OBJECT_NOT_FOUND);
           }
           resolve(value);
         })
@@ -280,7 +280,7 @@ export abstract class CRUD<D extends mongoose.Document> {
 
       /* Check for valid obj id */
       if (!objId) {
-        return next({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
+        return next(SERVER_ERRORS.OBJECT_NOT_FOUND);
       }
 
       /* Look for the target object */
@@ -288,12 +288,12 @@ export abstract class CRUD<D extends mongoose.Document> {
         .then((value?: any) => {
           /* Check if the given module is valid */
           if (!value || value.status !== SERVER_STATUS.ENABLED) {
-            return next({ boError: SERVER_ERRORS.OBJECT_NOT_FOUND });
+            return next(SERVER_ERRORS.OBJECT_NOT_FOUND);
           }
 
           /* Check the object owner if its necessary */
           if (ownerId && value.owner.toString() !== ownerId) {
-            return next({ boError: SERVER_ERRORS.INVALID_OWNER });
+            return next(SERVER_ERRORS.UNAUTHORIZED);
           }
 
           /* Store the object information to be used into the next middleware */

@@ -129,7 +129,6 @@ export class HttpServer {
       this._app.disable("x-powered-by");
       this._app.use(Helmet.contentSecurityPolicy());
       this._app.use(Helmet.dnsPrefetchControl());
-      this._app.use(Helmet.expectCt());
       this._app.use(Helmet.frameguard({ action: "deny" }));
       this._app.use(Helmet.hidePoweredBy());
       this._app.use(
@@ -234,10 +233,7 @@ export class HttpServer {
     /* Other routes give 404 error */
     this._app.use(function (_req, res, next) {
       if (!res.locals["response"]) {
-        return next({
-          boError: SERVER_ERRORS.INVALID_OPERATION,
-          boStatus: HTTP_STATUS.HTTP_4XX_NOT_FOUND
-        });
+        return next(SERVER_ERRORS.INVALID_OPERATION);
       }
       next();
     });
