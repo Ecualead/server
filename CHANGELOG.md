@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.0.0 - 2023-11-12
+
+- Update dependencies
+- Expose express, mongoose, typegoose, joi
+- Update error mechanism
+
 ## 2.2.3 - 2022-01-04
 
 - Fix CRUD query parameters
