@@ -16,38 +16,36 @@ npm install @ecualead/server
 
 To run a microservice using `@ecualead/server` there are some environment variables that can be configured to initialize the server. Environment variables are separated into three groups.
 
-### Service variables
-
+### General server settings
+- `INSTANCES`: Number of instances to run inside the cluster of process, by default `1` if the variable is omitted.
 - `INTERFACE`: Set the service listening interface, by default `127.0.0.1` if the variable is omitted.
 - `PORT`: Set the service listening port, by default `3000` if the variable is omitted.
-- `NODE_ENV`: NodeJS running environment, used to additional logger on request. Set to `production` to disable extended logger. Any other value is considered as `development`.
-- `INSTANCES`: Number of instances to run inside the cluster of process, by default `1` if the variable is omitted.
-- `LOG`: Components log level, it use the `Logger` wrapper off `@ecualead/core`. By default `error` if the variable is omitted.
-- `BODY_TRACE`: Set if the request body must be debbuged in development mode.
-- `RESPONSE_TRACE`: Set if the response body must be debbuged in development mode.
 
-### Database environment variables
-
-- `MONGODB_URI`: MongoDB database URI connection. If the variable is omitted the database connection is omitted.
-- `MONGODB_NOT_AUTO_INDEX`: If it's `true` prevent Mongoose connection use the `autoIndex` initialization option. Any value different of `true` is considered as false.
-- `MONGODB_POOL_SIZE`: Set the Mongoose pool size, by default `10` if the variable is omitted.
-
-### HTTP server environment variables
-
+### HTTP Server settings
 - `HTTP_BODY_SIZE`: Set the maximum request body size, by default it use the configured value in `express`.
 - `HTTP_NOT_METHOD_OVERRIDE`: If it's `true` prevent Express to configure HTTP verbs such as PUT or DELETE in places where the client doesn't support it. Any value different of `true` is considered as false.
 - `HTT_NOT_CORS`: If it's `true` prevent Express allowing CORS access. Any value different of `true` is considered as false. In this service implementation CORS is allowed for all origins. If you need a more specific configuration, then global CORS must be disabled and enabled manually in the required points.
 - `HTTP_NOT_TRUST_PROXY`: If it's `true` prevent Express set the `trust proxy` configuration. Any value different of `true` is considered as false.
+
+### Logging settings
+- `LOG`: Components log level, it use the `Logger` wrapper. By default `error` if the variable is omitted.
+- `BODY_TRACE`: Set if the request body must be debbuged in development mode.
+- `RESPONSE_TRACE`: Set if the response body must be debbuged in development mode.
+
+### MongoDB settings
+- `MONGODB_URI`: MongoDB database URI connection. If the variable is omitted the database connection is omitted.
+- `MONGODB_NOT_AUTO_INDEX`: If it's `true` prevent Mongoose connection use the `autoIndex` initialization option. Any value different of `true` is considered as false.
+- `MONGODB_POOL_SIZE`: Set the Mongoose pool size, by default `10` if the variable is omitted.
 
 ## Write my first server
 
 To start your first server only needs develop the routes to be called, for example:
 
 ```js
-import { Router, Request, Response, NextFunction } from "express";
-const router = Router();
+import { express as e } from "@ecualead/server";
+const router = e.Router();
 
-router.get("/hello", (req: Request, res: Response, next: NextFunction) => {
+router.get("/hello", (req: e.Request, res: e.Response, next: e.NextFunction) => {
   res.send("Hello World");
   res.end();
 });
@@ -180,7 +178,7 @@ const expressApp = server.app;
 
 ## Using middleware
 
-The server package includes some middleware that optional can be used. These are some middleware used in the IKOA Business Platform development.
+The server package includes some middleware that optional can be used.
 
 ### Response handlers
 
@@ -188,44 +186,33 @@ The response handlers are middleware to handle the express api response for succ
 
 Success handler always send responses in JSON format, it only transform the response data to JSON and stream it to the client. To receive the response the server package the express response `locals` variable. Inside it handle `response`, any other variable in `locals` is not handled into the success handler.
 
-Error handler takes into account several error sources like MongoDB, Joi validators, authentication service or the platform error schema:
+Error handler takes into account several error sources like MongoDB, Joi validators, authentication service between others.
 
-```js
-export interface IError {
-  value: number;
-  str?: string;
-  status?: HTTP_STATUS;
-}
+For specific error sources, not all possible values are handled, only an small set of it are handled and defined in `SERVER_ERRORS`. If your server need handle an specific error type you can make your own handle error or can add an error handler middleware that translate the error to the platform error schema. To create new errors you can initialize them with the constructor:
 
-interface IErrorResponse {
-  boError: IError;
-  boStatus: HTTP_STATUS;
-  boData?: any;
-}
+```
+new IError(value: number, str?: string, status?: HTTP_STATUS, data?: any)
 ```
 
-For specific error sources, not all possible values are handled, only an small set of it are handled. If your server need handle an specific error type you can make your own handle error or can add an error handler middleware that translate the error to the platform error schema.
-
-The platform error schema is translated to an express response setting the response stats to the value of `boStatus` or get value from `boError.status` or by default `400` if its omitted. The body of the response has the following schema:
+The platform error schema is translated to an express response setting the response status to the value of `status` or by default `400` if its omitted. The body of the response has the following schema:
 
 ```js
 {
-  error: number; // Get from boError.value
-  description: string; // Get from boError.str
-  data: any; // Get from boData
+  error: number; // Get from error.value
+  description: string; // Get from error.str
+  data: any; // Get from error.data
 }
 ```
 
 We can write our router like:
 
 ```js
-import { Router, Request, Response, NextFunction } from "express";
-import { ResponseHandler } from "@ecualead/server";
-const router = Router();
+import { ResponseHandler, express as e } from "@ecualead/server";
+const router = e.Router();
 
 router.get(
   "/hello",
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: e.Request, res: e.Response, next: e.NextFunction) => {
     if (req.query["error"]) {
       /* Raise error handler */
       return next({ boError: 1012, boStatus: 403 });
@@ -253,16 +240,15 @@ To allow data validation the package includes a middleware to validate any reque
 Using validators router can be rewritten
 
 ```js
-import { Router, Request, Response, NextFunction } from "express";
-import { ResponseHandler, Validator, ValidateObjectId } from "@ecualead/server";
-const router = Router();
+import { ResponseHandler, Validator, ValidateObjectId, express as e } from "@ecualead/server";
+const router = e.Router();
 
 router.post(
   "/hello/:id",
   Validator.joi(ValidateObjectId, "params"), // Validate that :id parameter is an ObjectId
   Validator.joi(OtherJoiSchemaBody), // Validate the request body with the given schema
   Validator.joi(OtherJoiSchemaQuery, "query"), // Validate the request query parameters with the given schema
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: e.Request, res: e.Response, next: e.NextFunction) => {
     if (req.query["error"]) {
       /* Raise error handler */
       return next({ boError: 1012, boStatus: 403 });
@@ -313,20 +299,18 @@ class BaseModel {
 The document owner and modifiedBy can be used to integrate with an user controller server and set document property and give more security to our server data. The first model can be:
 
 ```js
-import mongoose from "mongoose";
-import { BaseModel } from "@ecualead/server";
-import { getModelForClass, prop, DocumentType, index } from "@typegoose/typegoose";
+import { BaseModel, mongoose, typegoose as t } from "@ecualead/server";
 
-@index({name:1}, {unique: true})
+@t.index({name:1}, {unique: true})
 export class MyModel extends BaseModel {
-  @prop({required: true, unique: true})
+  @t.prop({required: true, unique: true})
   name!: string;
 
   /**
    * Get the mongoose data model
    */
   static get shared() {
-    return getModelForClass(MyModel, {
+    return t.getModelForClass(MyModel, {
       schemaOptions: {
         collection: "my-models",
         timestamps: true,
@@ -343,7 +327,7 @@ export class MyModel extends BaseModel {
   }
 }
 
-export type MyModelDocument = DocumentType<MyModel>;
+export type MyModelDocument = t.DocumentType<MyModel>;
 export const MyModelModel: mongoose.Model<MyModelDocument> = MyModel.shared;
 ```
 
@@ -354,7 +338,7 @@ For each model we recommend create and export the document and the model to allo
 The data controller can be implemented extending the `CRUD` class:
 
 ```js
-import { CRUD } from "@ecualead/core_srv";
+import { CRUD } from "@ecualead/server";
 import { MyModelDocument, MyModelModel } from "@/models/events.model";
 
 class MyModelCtrl extends CRUD<MyModelDocument>{
@@ -393,8 +377,8 @@ abstract class CRUD<T, D extends mongoose.Document> {
 
 By default `CRUD` perform all queries with condition `status > 0`. If you don't handle the status field at object creation or the field is not needed, you can prevent use this fields in queries setting the options at the `CRUD` constructor:
 
-````js
-import { CRUD } from "@ecualead/core_srv";
+```js
+import { CRUD } from "@ecualead/server";
 import { MyModelDocument, MyModelModel } from "@/models/events.model";
 
 class MyModelCtrl extends CRUD<MyModelDocument>{
@@ -417,7 +401,7 @@ class MyModelCtrl extends CRUD<MyModelDocument>{
     return MyModelCtrl._instance;
   }
 }
-``
+```
 
 ## Predefined constants
 
@@ -425,8 +409,8 @@ Package include a set of predefined constants to be used inside backend/frontend
 It includes constants to prefeined object status, prefined general errors, logs level, and HTTP status responses.
 
 ```js
-import { LOG_LEVEL, SERVER_STATUS, SERVER_ERRORS, HTTP_STATUS } from "@ecualead/core";
-````
+import { LOG_LEVEL, SERVER_STATUS, SERVER_ERRORS, HTTP_STATUS } from "@ecualead/server";
+```
 
 ## Using Logger
 
@@ -435,7 +419,7 @@ output and must be configured on server initialization. Logger support the same 
 [`winston`][winston].
 
 ```js
-import { Logger, LOG_LEVEL } from "@ecualead/core";
+import { Logger, LOG_LEVEL } from "@ecualead/server";
 
 /* Set the global log level */
 Logger.setLogLevel(LOG_LEVEL.DEBUG);
@@ -462,7 +446,7 @@ _logger2.debug("Debug from another component", {
 Arrays implements functions to improve array data manipulation. it implements functions to ensure array initialization with include/exclude values, array sort, binary search and multiple arrays intersection.
 
 ```js
-import { Arrays } from "@ecualead/core";
+import { Arrays } from "@ecualead/server";
 let arr1 = [1, 2, 3, 5, 7];
 let arrInclude = [3, 15, 6];
 let arrExclude = [2, 5];
@@ -486,7 +470,7 @@ Objects utilities functions allow to fetch object properties and set
 a default value if any path don't exists.
 
 ```js
-import { Objects } from "@ecualead/core";
+import { Objects } from "@ecualead/server";
 
 let obj = {
   alfa: {
@@ -512,7 +496,7 @@ Also functions allow to set an object value following the geiven path.
 If any elements inside path don't exists then it's created.
 
 ```js
-import { Objects } from "@ecualead/core";
+import { Objects } from "@ecualead/server";
 
 let obj = {
   alfa: {
@@ -540,7 +524,7 @@ Tokens its a set of function to generate pseudorandoms tokens. There are functio
 short, medium and long tokens. Short and medium token are generated with [`uniqid`][uniqid] and long tokens are generated with [`sha.js`][sha.js].
 
 ```js
-import { Tokens } from "@ecualead/core";
+import { Tokens } from "@ecualead/server";
 
 /* Generate short token (8 byte) */
 const shortToken = Tokens.short;
@@ -558,7 +542,7 @@ const longToken = Tokens.long;
 Stream class allow to pipe streamed data to the `express` response. User can use a filter function to prepare the object data to be sent into the response. Filter function its an optional parameter.
 
 ```js
-import { Streams } from "@ecualead/core";
+import { Streams } from "@ecualead/server";
 
 ...
 
