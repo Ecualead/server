@@ -32,67 +32,50 @@ To run a microservice using `@ecualead/server` there are some environment variab
 - `BODY_TRACE`: Set if the request body must be debbuged in development mode.
 - `RESPONSE_TRACE`: Set if the response body must be debbuged in development mode.
 
-### MongoDB settings
-- `MONGODB_URI`: MongoDB database URI connection. If the variable is omitted the database connection is omitted.
-- `MONGODB_NOT_AUTO_INDEX`: If it's `true` prevent Mongoose connection use the `autoIndex` initialization option. Any value different of `true` is considered as false.
-- `MONGODB_POOL_SIZE`: Set the Mongoose pool size, by default `10` if the variable is omitted.
-
 ## Write my first server
 
 To start your first server only needs develop the routes to be called, for example:
 
 ```js
-import { express as e } from "@ecualead/server";
-const router = e.Router();
+import { express as e, ClusterServer } from "@ecualead/server";
 
+const router = e.Router();
 router.get("/hello", (req: e.Request, res: e.Response, next: e.NextFunction) => {
   res.send("Hello World");
   res.end();
 });
-
-export default router;
-```
-
-### Write small cluster server
-
-A single instance of Node.js runs in a single thread. To take advantage of multi-core systems, the user will sometimes want to launch a cluster of Node.js processes to handle the load. This advantage can be also achieved using external web server using load balance between several instances of your NodeJS server, but this instances must runs at different ports.
-
-To start an small server with with several worker processes we use:
-
-```js
-import { ClusterServer } from "@ecualead/server";
-import MyRouter1 from "./routes1";
-import MyRouter2 from "./routes2";
-import MyRouter3 from "./routes3";
 
 /* Initialize cluster server */
 const clusterServer = ClusterServer.setup();
 
 /* Run cluster with routes */
 clusterServer.run({
-  "/api/v1/greetings": MyRouter1,
-  "/api/v1": [MyRouter2, MyRouter3]
+  "/greetings": router,
 });
 ```
 
-And the server is ready to be started. In the cluster initialization you can add many routes as you want. By default the package register the route `/version` to get the server running version, so you can't use this route because the package route is declared first and it will be called always.
+If the user set the `INSTANCES` environment variable to a value grater than 1 the server will be running in a cluster mode, if not, the server will be running in a single thread mode.
 
-The cluster serve initialization or setup set hooks for master process and slave process
+Now the server is ready. In the cluster initialization you can add many routes as you want. By default the package register the route `/health` to validate the server healthy returning the server running version.
+
+### Server initialization hooks
+
+For the server initialization there are a set of hooks that can be used to add custom code between the server initialization. There are two types of hooks: slave hooks and master hooks. Slave hooks are used to control the initialization on the slave process when server is running in cluster mode, and is also used to control the initialization when the server runs in single thread mode. Master hooks are only aplied to the master process when the server is runing in cluster mode.
+
+The use the hooks we can include them in the call to the cluster setup:
 
 ```js
 public static setup(slaveHooks?: ISlaveHooks, masterHooks?: IMasterHooks): ClusterServer;
 ```
 
-The slave process hooks control the whole process of server initialization calling hook before opening MongoDB connection, after the connection is opened, before starting express server and after it's initialized and finally when the server is listening for connections.
+The slave process hooks control the whole process of server initialization calling hook before configuring the http server, before loading defined routes, after the http server is initalized and after start listening on the configured port.
 
 ```js
 interface ISlaveHooks {
-  preMongo?: () => Promise<void>;
-  postMongo?: () => Promise<void>;
-  preExpress?: () => Promise<void>;
-  preRoutes?: (app: express.Application) => Promise<void>;
-  postExpress?: (app: express.Application) => Promise<void>;
-  running?: () => Promise<void>;
+  onBeforeLoadServer?: () => Promise<void>;
+  onBeforeLoadRoutes?: (app: express.Application) => Promise<void>;
+  onAfterLoadServer?: (app: express.Application) => Promise<void>;
+  onAfterListen?: () => Promise<void>;
 }
 ```
 
@@ -100,68 +83,59 @@ The master process hooks allow to handle when a new worker is started.
 
 ```js
 interface IMasterHooks {
-  worker?: (worker: any) => Promise<void>;
+  onRunWorker?: (worker: any) => Promise<void>;
 }
 ```
 
 By default each slave process follow an initialization process:
 
-- Connect database
-- Initialize express server
+- Call hook before http server initialization
+- Initialize http server
+- Call hook before loading the routes
+- Load defined routes
+- Call hook after http server initialization
 - Listen by connections
+- Call hook after start listening
 
-With the help of slaves hooks you can inject actions between this steps, for example: authenticating against a service or requesting external information. But in certain cases it's needed change the whole process. At moment of start the cluster you can add a custom master and slave runner.
+With the help of slaves hooks you can inject actions between this steps, for example: authenticating against a service or requesting external information. 
+
+### Customize the master/slave initialization
+
+in certain cases it's needed change the whole process for the master and/or the slave process to run custom initialization, like for example Socket.io server. This customization can be done at the moment that we call to start runing the cluster.
 
 ```js
-public run(routes?: any, customMaster?: () => void, customSlave?: (server: HttpServer, routes?: any) => void);
+public run(routes?: any, customMaster?: (instances: number) => void, customSlave?: (server: HttpServer, routes?: any) => void);
 ```
 
-If the master runner is set, it must do the manual call to create and handle the slave process.
+If the master runner is set, it must do the manual call to create using `fork` and handle the slave process.
 
-### Write single thread server
+### Write raw single thread server
 
 To start a single threaded server we must execute the initialization process using the `HttpServer` class:
 
 ```js
-import { HttpServer } from "@ecualead/server";
-import MyRouter1 from "./routes1";
-import MyRouter2 from "./routes2";
-import MyRouter3 from "./routes3";
+import { express as e, HttpServer } from "@ecualead/server";
+
+const router = e.Router();
+router.get("/hello", (req: e.Request, res: e.Response, next: e.NextFunction) => {
+  res.send("Hello World");
+  res.end();
+});
 
 /* Initialize the server */
 const server = HttpServer.shared;
 
-/* Connect MongoDB database */
-server
-  .initMongo()
-  .then(() => {
-    /* Init express server */
-    server
-      .initExpress(0, {
-        "/api/v1/greetings": MyRouter1,
-        "/api/v1": [MyRouter2, MyRouter3]
-      })
-      .then(() => {
-        /* Start http server */
-        server
-          .listen(3000)
-          .then(() => {
-            // Server is running
-          })
-          .catch((err) => {
-            console.error("Error starting http server: " + JSON.stringify(err));
-            process.exit(-1);
-          });
-      })
-      .catch((err) => {
-        console.error("Error starting express server: " + JSON.stringify(err));
-        process.exit(-1);
-      });
+const initServer = async () => {  
+  /* Init http server */
+  await server.initHttpServer(null, null, {
+    "/greetings": router,
   })
-  .catch((err) => {
-    console.error("Error connecting to MongoDB: " + JSON.stringify(err));
-    process.exit(-1);
-  });
+  
+  /* Start the slave worker HTTP server */
+  await server.startListen();
+}
+
+initServer();
 ```
 
 To add customized options to express application server yo can use the HttpServer function:
@@ -178,7 +152,7 @@ const expressApp = server.app;
 
 ## Using middleware
 
-The server package includes some middleware that optional can be used.
+The server package includes some middleware that can be used. By default the server initialization use the response middleware to handle the success responses and the error responses.
 
 ### Response handlers
 
@@ -186,20 +160,19 @@ The response handlers are middleware to handle the express api response for succ
 
 Success handler always send responses in JSON format, it only transform the response data to JSON and stream it to the client. To receive the response the server package the express response `locals` variable. Inside it handle `response`, any other variable in `locals` is not handled into the success handler.
 
-Error handler takes into account several error sources like MongoDB, Joi validators, authentication service between others.
+Error handler takes into account general error sources like MongoDB, Joi validators, authentication service between others.
 
 For specific error sources, not all possible values are handled, only an small set of it are handled and defined in `SERVER_ERRORS`. If your server need handle an specific error type you can make your own handle error or can add an error handler middleware that translate the error to the platform error schema. To create new errors you can initialize them with the constructor:
 
 ```
-new IError(value: number, str?: string, status?: HTTP_STATUS, data?: any)
+new IError(str: string, status: HTTP_STATUS = HTTP_STATUS.HTTP_4XX_BAD_REQUEST, data?: any)
 ```
 
 The platform error schema is translated to an express response setting the response status to the value of `status` or by default `400` if its omitted. The body of the response has the following schema:
 
 ```js
 {
-  error: number; // Get from error.value
-  description: string; // Get from error.str
+  error: string; // Get from error.str
   data: any; // Get from error.data
 }
 ```
@@ -207,7 +180,7 @@ The platform error schema is translated to an express response setting the respo
 We can write our router like:
 
 ```js
-import { ResponseHandler, express as e } from "@ecualead/server";
+import { ResponseHandler, express as e, IError } from "@ecualead/server";
 const router = e.Router();
 
 router.get(
@@ -215,7 +188,7 @@ router.get(
   (req: e.Request, res: e.Response, next: e.NextFunction) => {
     if (req.query["error"]) {
       /* Raise error handler */
-      return next({ boError: 1012, boStatus: 403 });
+      return next(new IError("unknown-error", HTTP_STATUS.HTTP_5XX_INTERNAL_SERVER_ERROR));
     }
 
     /* Send response with success handler */
@@ -240,12 +213,11 @@ To allow data validation the package includes a middleware to validate any reque
 Using validators router can be rewritten
 
 ```js
-import { ResponseHandler, Validator, ValidateObjectId, express as e } from "@ecualead/server";
+import { ResponseHandler, Validator, express as e } from "@ecualead/server";
 const router = e.Router();
 
 router.post(
   "/hello/:id",
-  Validator.joi(ValidateObjectId, "params"), // Validate that :id parameter is an ObjectId
   Validator.joi(OtherJoiSchemaBody), // Validate the request body with the given schema
   Validator.joi(OtherJoiSchemaQuery, "query"), // Validate the request query parameters with the given schema
   (req: e.Request, res: e.Response, next: e.NextFunction) => {
@@ -269,147 +241,13 @@ export default router;
 
 In this case the validator it's integrated with the error response handler, raising errors in the platform schema.
 
-## Using data model utilities
-
-Another of the advantage of the package is the data model utilities classes. The package include a class to create Mongoose data models using `Typegoose` annotations and also include a class to create a basic CRUD controller.
-
-### Creating my first data model
-
-To create our first data model we use the `BaseModel` class. This class include optional fields to handle document owning and document status.
-
-```js
-class BaseModel {
-  @prop({ required: true, default: SERVER_STATUS.ENABLED })
-  status?: number;
-
-  @prop({ type: mongoose.Types.ObjectId })
-  owner?: string;
-
-  @prop()
-  createdAt?: Date;
-
-  @prop()
-  updatedAt?: Date;
-
-  @prop({ type: mongoose.Types.ObjectId })
-  modifiedBy?: string;
-}
-```
-
-The document owner and modifiedBy can be used to integrate with an user controller server and set document property and give more security to our server data. The first model can be:
-
-```js
-import { BaseModel, mongoose, typegoose as t } from "@ecualead/server";
-
-@t.index({name:1}, {unique: true})
-export class MyModel extends BaseModel {
-  @t.prop({required: true, unique: true})
-  name!: string;
-
-  /**
-   * Get the mongoose data model
-   */
-  static get shared() {
-    return t.getModelForClass(MyModel, {
-      schemaOptions: {
-        collection: "my-models",
-        timestamps: true,
-        toJSON: {
-          virtuals: true,
-          versionKey: false,
-          transform: (_doc: any, ret: any) => {
-            return _doc;
-          },
-        },
-      },
-      options: { automaticName: false },
-    });
-  }
-}
-
-export type MyModelDocument = t.DocumentType<MyModel>;
-export const MyModelModel: mongoose.Model<MyModelDocument> = MyModel.shared;
-```
-
-For each model we recommend create and export the document and the model to allow the integration with the data controller.
-
-### Creating my first data controller
-
-The data controller can be implemented extending the `CRUD` class:
-
-```js
-import { CRUD } from "@ecualead/server";
-import { MyModelDocument, MyModelModel } from "@/models/events.model";
-
-class MyModelCtrl extends CRUD<MyModelDocument>{
-  private static _instance: MyModelCtrl;
-
-  private constructor() {
-    super('MyModel Controller', MyModelModel);
-  }
-
-  public static get shared(): MyModelCtrl {
-    if (!MyModelCtrl._instance) {
-      MyModelCtrl._instance = new MyModelCtrl();
-    }
-    return MyModelCtrl._instance;
-  }
-}
-```
-
-The `CRUD` class add to our data controller functions to handle de Mongoose model. Custom data manipulation can be implemented into the controller or called directly on the Mongoose model. The delete action implemented into the CRUD it's a soft-delete, data isn't removed from server, only the status field is marked as deleted.
-
-```js
-abstract class CRUD<T, D extends mongoose.Document> {
-  protected _model: mongoose.Model<D>;
-  protected _logger: Logger;
-
-  public create(data: T): Promise<D>;
-  public update(queryId: string | any, data?: T, update?: any, options?: any): Promise<D>;
-  public fetch(queryId: string | any, options?: any, populate?: string[]): Promise<D>;
-  public fetchAll(queryId: any, options?: any, populate?: string[]): mongoose.QueryCursor<D>;
-  public fetchRaw(queryId: any, options?: any, populate?: string[]): mongoose.DocumentQuery<D[], D>;
-  public delete(queryId: string | any): Promise<D>;
-  protected _updateStatus(queryId: string | any, status: SERVER_STATUS): Promise<D>;
-  public validate(path: string, owner?: string);
-}
-```
-
-By default `CRUD` perform all queries with condition `status > 0`. If you don't handle the status field at object creation or the field is not needed, you can prevent use this fields in queries setting the options at the `CRUD` constructor:
-
-```js
-import { CRUD } from "@ecualead/server";
-import { MyModelDocument, MyModelModel } from "@/models/events.model";
-
-class MyModelCtrl extends CRUD<MyModelDocument>{
-  private static _instance: MyModelCtrl;
-
-  private constructor() {
-    super('MyModel Controller', MyModelModel, {
-      /* Optional value, by default extract name from model class */
-      modelName: "My model name",
-
-      /* By default is set to false */
-      preventStatusQuery: true,
-    });
-  }
-
-  public static get shared(): MyModelCtrl {
-    if (!MyModelCtrl._instance) {
-      MyModelCtrl._instance = new MyModelCtrl();
-    }
-    return MyModelCtrl._instance;
-  }
-}
-```
-
 ## Predefined constants
 
 Package include a set of predefined constants to be used inside backend/frontend development.
 It includes constants to prefeined object status, prefined general errors, logs level, and HTTP status responses.
 
 ```js
-import { LOG_LEVEL, SERVER_STATUS, SERVER_ERRORS, HTTP_STATUS } from "@ecualead/server";
+import { LOG_LEVEL, SERVER_ERRORS, HTTP_STATUS } from "@ecualead/server";
 ```
 
 ## Using Logger
@@ -425,17 +263,17 @@ import { Logger, LOG_LEVEL } from "@ecualead/server";
 Logger.setLogLevel(LOG_LEVEL.DEBUG);
 
 /* Initialize the logger for multiple components */
-const _logger1 = new Logger("MiComponent");
-const _logger2 = new Logger("OtherComponent");
+const logger1 = new Logger("MiComponent");
+const logger2 = new Logger("OtherComponent");
 
 /* Log an error from one logger */
-_logger1.error("Error from one component", {
+logger1.error("Error from one component", {
   code: 2,
   msg: "Invalid call"
 });
 
 /* Log a debug message from the other logger */
-_logger2.debug("Debug from another component", {
+logger2.debug("Debug from another component", {
   field: "social",
   value: 10
 });
@@ -451,16 +289,18 @@ let arr1 = [1, 2, 3, 5, 7];
 let arrInclude = [3, 15, 6];
 let arrExclude = [2, 5];
 
-/* Get new array [1, 3, 7, 15, 6] */
-let newArr = Arrays.initialize < number > (arr1, arrInclude, arrExclude);
+/* Get new array [1, 3, 7, 15, 6]
+ * New array will contains the arr1 values, including arrInclude values but removing arrExclude values
+ */
+let newArr = Arrays.create<number>(arr1, arrInclude, arrExclude);
 console.log(newArr);
 
 /* Sort the array and search a value inside the array */
-Arrays.sort < number > newArr;
+Arrays.sort<number>(newArr);
 console.log(Arrays.search(newArr, 7)); // Prints 3
 
 /* Intersect multiple arrays, gets [3] */
-let intArr = Arrays.intersect < number > (newArr, arr1, arrInclude);
+let intArr = Arrays.intersect<number>(newArr, arr1, arrInclude);
 console.log(intArr);
 ```
 
