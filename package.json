@@ -10,11 +10,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "deploy": "tsc && npm run publish-npm",
-    "publish-npm": "npm publish --registry='https://registry.npmjs.org/' --access public",
+    "deploy": "tsc && pnpm run publish-npm",
+    "publish-npm": "pnpm publish --registry='https://registry.npmjs.org/' --access public",
     "lint": "tsc --noEmit && eslint '*/**/*.ts' --fix",
     "test": "mocha --require ts-node/register tests/*.ts",
-    "coverage": "nyc npm run test"
+    "coverage": "nyc pnpm run test"
   },
   "files": [
     "lib/**/*"
