@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 ECUALEAD
+ * Copyright (C) 2020-2024 ECUALEAD LLC
  *
  * All Rights Reserved
  * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
@@ -8,39 +8,9 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import JoiBase from "joi";
+import joi from "joi";
 import { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
-import { SERVER_ERRORS } from "../constants/errors.enum";
-
-/**
- * Custom JOI validator to validate ObjectId
- */
-const CustomJoi = JoiBase.extend((joi) => {
-  return {
-    type: "objectId",
-    base: joi.string().min(24).max(24),
-    messages: {
-      "objectId.invalid": '"{{#label}}" isn\'t a valid ObjectId'
-    },
-    validate(value, helpers) {
-      /* Validate value against Mongoose ObjectId validator */
-      if (!mongoose.isValidObjectId(value)) {
-        return { value, errors: helpers.error("objectId.invalid") };
-      }
-
-      return null;
-    }
-  };
-});
-export const Joi = CustomJoi;
-
-/**
- * Predefined ObjectId validator with :id parameter
- */
-export const ValidateObjectId = CustomJoi.object().keys({
-  id: CustomJoi.objectId().required()
-});
+import { SERVER_ERRORS } from "../constants/errors";
 
 /**
  * Validator class to wrap JOI validation with express middleware
@@ -71,7 +41,7 @@ export class Validator {
     return (req: Request, _res: Response, next: NextFunction) => {
       const reqTmp: any = req;
       try {
-        Joi.attempt(reqTmp[reqField], schema, { abortEarly: false, convert: true });
+        joi.attempt(reqTmp[reqField], schema, { abortEarly: false, convert: true });
       } catch (err) {
         next(Validator._handleErr(err));
         return;

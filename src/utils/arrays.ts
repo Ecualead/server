@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 ECUALEAD
+ * Copyright (C) 2020-2024 ECUALEAD LLC
  *
  * All Rights Reserved
  * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
@@ -16,7 +16,7 @@ export class Arrays {
   /**
    * Initialize and array with default values and values that can't be used
    */
-  public static initialize<T>(value: T[] | null, defaults?: T[], prevent?: T[]): T[] {
+  public static create<T>(value: T[] | null, includeValues?: T[], preventValues?: T[]): T[] {
     let array: T[];
     if (!value) {
       array = [];
@@ -26,8 +26,8 @@ export class Arrays {
     array = Array.from(value || []);
 
     /* Add default values */
-    if (defaults && defaults.length > 0) {
-      defaults.forEach((tmp: T) => {
+    if (includeValues && includeValues.length > 0) {
+      includeValues.forEach((tmp: T) => {
         if (array.indexOf(tmp) < 0) {
           array.push(tmp);
         }
@@ -35,8 +35,8 @@ export class Arrays {
     }
 
     /* Handle if there is values to be excluded */
-    if (prevent && prevent.length > 0) {
-      array = array.filter((tmp) => prevent.indexOf(tmp) < 0);
+    if (preventValues && preventValues.length > 0) {
+      array = array.filter((tmp) => preventValues.indexOf(tmp) < 0);
     }
 
     return array;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 ECUALEAD
+ * Copyright (C) 2020-2024 ECUALEAD LLC
  *
  * All Rights Reserved
  * Author: Reinier Millo Sánchez <rmillo@ecualead.com>

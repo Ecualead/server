@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 ECUALEAD
+ * Copyright (C) 2020-2024 ECUALEAD LLC
  *
  * All Rights Reserved
  * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
@@ -9,12 +9,12 @@
  * permission of the author.
  */
 
-/**
- * Predefined base status
- */
-export enum SERVER_STATUS {
-  SOFT_DELETE = -1,
-  UNKNOWN = 0,
-  DISABLED = 1,
-  ENABLED = 2
-}
+export const LOG_LEVEL = {
+  ERROR: "error",
+  WARN: "warn",
+  INFO: "info",
+  HTTP: "http",
+  VERBOSE: "verbose",
+  DEBUG: "debug",
+  SILLY: "silly"
+};

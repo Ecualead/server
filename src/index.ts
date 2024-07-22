@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 ECUALEAD
+ * Copyright (C) 2020-2024 ECUALEAD LLC
  *
  * All Rights Reserved
  * Author: Reinier Millo Sánchez <rmillo@ecualead.com>
@@ -8,42 +8,29 @@
  * It can't be copied and/or distributed without the express
  * permission of the author.
  */
-import { setGlobalOptions, Severity } from "@typegoose/typegoose";
-
-/* Allow to use Mixed types */
-setGlobalOptions({ options: { allowMixed: Severity.ALLOW } });
 
 /* Export constants */
-export { SERVER_ERRORS, IServiceErrors } from "./constants/errors.enum";
-export { SERVER_STATUS } from "./constants/status.enum";
-export { HTTP_STATUS } from "./constants/http.status.enum";
-export { LOG_LEVEL } from "./constants/logger.enum";
+export { SERVER_ERRORS, IErrors, IError } from "./constants/errors";
+export { HTTP_STATUS } from "./constants/http-status";
+export { LOG_LEVEL } from "./constants/logger";
 
 /* Export api controllers */
-export { ClusterServer, IMasterHooks, ISlaveHooks } from "./controllers/cluster.controller";
-export { HttpServer } from "./controllers/server.controller";
-export { CRUD, IQueryParameters, IQueryOptions } from "./controllers/crud.controller";
-export { ErrorCtrl, IError } from "./controllers/error.controller";
-export { Logger } from "./controllers/logger.controller";
-export { Streams } from "./controllers/streams.controller";
-
-/* Export models */
-export { BaseModel } from "./models/base.model";
-export { GeoJSON } from "./models/geojson.model";
+export { ClusterServer, IMasterHooks, ISlaveHooks } from "./controllers/cluster";
+export { HttpServer } from "./controllers/http_server";
+export { Logger } from "./controllers/logger";
 
 /* Export middlewares */
-export { ResponseHandler } from "./middlewares/response.middleware";
-export { Joi, Validator, ValidateObjectId } from "./middlewares/validator.middleware";
-export { FormURLEncoded } from "./middlewares/form.urlencoded.middleware";
+export { ResponseHandler } from "./middlewares/response";
+export { Validator } from "./middlewares/validator";
+export { ContentType, FormURLEncoded, FORM_URL_ENCODED } from "./middlewares/content-type";
 
 /* Export utils */
-export { Arrays } from "./utils/arrays.util";
-export { Objects } from "./utils/objects.util";
-export { Tokens } from "./utils/tokens.util";
+export { Arrays } from "./utils/arrays";
+export { Objects } from "./utils/objects";
+export { Streams } from "./utils/streams";
+export { Tokens } from "./utils/tokens";
 
 // Export additional module components
-import * as express from 'express';
-import * as joi from 'joi';
-import *  as mongoose from 'mongoose';
-import * as typegoose from '@typegoose/typegoose';
-export { express, joi, mongoose, typegoose };
+import express from 'express';
+import joi from 'joi';
+export { express, joi };
