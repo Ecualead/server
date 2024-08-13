@@ -48,6 +48,8 @@ export class ResponseHandler {
       } else {
         errObj.data = err;
       }
+    }else{
+      errObj = err;
     }
 
     /* Prepare error response */
